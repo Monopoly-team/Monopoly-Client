@@ -1,0 +1,16 @@
+build/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.user
+*.pro.user
+*.moc
+*.qrc.cpp
+*.rcc.cpp
+Makefile
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.log
