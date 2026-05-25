@@ -17,7 +17,7 @@ file(GLOB_RECURSE SOURCES
 )
 
 file(GLOB_RECURSE HEADERS
-    include/**/*.h
+    include/**/*.hpp
 )
 
 add_executable(${PROJECT_NAME}
