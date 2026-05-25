@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(screens_);
 
     screens_->setCurrentWidget(loginWidget_);
+
+    connect(loginWidget_, &LoginWidget::loginRequested, this, &MainWindow::showMenu);
 }
 
 MainWindow::~MainWindow() = default;

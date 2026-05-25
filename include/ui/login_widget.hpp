@@ -1,5 +1,7 @@
 #pragma once
 
+#include "center_card_widget.hpp"
+
 #include <QWidget>
 #include <QFrame>
 #include <QLabel>
@@ -7,21 +9,21 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-class LoginWidget : public QWidget
+class LoginWidget : public CenterCardWidget
 {
+    Q_OBJECT
+signals:
+    void loginRequested();
 public:
     explicit LoginWidget(QWidget* parent = nullptr);
     ~LoginWidget() override;
 private:
-    QFrame*      card_;
-    QLabel*      titleLabel_;
     QLabel*      subtitleLabel_;
-    QLineEdit*   nameEdit_;
-    QLineEdit*   passwordEdit_;
-    QPushButton* loginButton_;
 
-    QVBoxLayout* rootLayout_;
-    QVBoxLayout* cardLayout_;
+    QLineEdit*   loginEdit_;
+    QLineEdit*   passwordEdit_;
+
+    QPushButton* loginButton_;
 };
 
 
