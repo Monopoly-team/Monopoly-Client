@@ -19,10 +19,13 @@ file(GLOB_RECURSE SOURCES
 file(GLOB_RECURSE HEADERS
     include/**/*.hpp
 )
-
+qt_add_resources(RESOURCES
+    resources.qrc
+)
 add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
+    ${RESOURCES}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

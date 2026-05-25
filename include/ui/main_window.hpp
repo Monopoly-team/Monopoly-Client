@@ -3,9 +3,9 @@
 #include <QMainWindow>
 #include <QStackedWidget>
 
-#include "menu_widget.hpp"
+#include "login_widget.hpp"
 #include "lobby_widget.hpp"
-#include "connect_widget.hpp"
+#include "menu_widget.hpp"
 #include "game_widget.hpp"
 
 class MainWindow : public QMainWindow
@@ -13,8 +13,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 private slots:
+    void showLogin();
     void showMenu();
-    void showConnect();
     void showLobby();
     void showGame();
 public:
@@ -22,9 +22,9 @@ public:
     ~MainWindow() override;
 private:
     QStackedWidget* screens_;
-    MenuWidget*     menuWidget_;
+    LoginWidget*    loginWidget_;
     LobbyWidget*    lobbyWidget_;
-    ConnectWidget*  connectWidget_;
+    MenuWidget*     menuWidget_;
     GameWidget*     gameWidget_;
 
 };
