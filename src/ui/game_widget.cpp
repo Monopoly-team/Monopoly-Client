@@ -9,7 +9,7 @@ GameWidget::GameWidget(QWidget *parent)
     centerGameWidget_   = new CenterGameWidget(this);
     chatWidget_         = new ChatWidget(this);
 
-    rootLayout_->addWidget(leftPanelWidget_ );
-    rootLayout_->addWidget(centerGameWidget_);
-    rootLayout_->addWidget(chatWidget_ );
+    rootLayout_->addWidget(leftPanelWidget_,1);
+    rootLayout_->addWidget(centerGameWidget_,4);
+    rootLayout_->addWidget(chatWidget_,1 );
 }

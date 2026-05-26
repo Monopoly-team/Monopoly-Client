@@ -19,6 +19,7 @@ PlayerCardBaseWidget::PlayerCardBaseWidget(QWidget *parent)
     avatar_->setFixedSize(96,96);
     avatar_->setPixmap(avatar.scaled(96,96,Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
+    rootLayout_->addSpacing(11);
     rootLayout_->addWidget(avatar_);
     rootLayout_->addSpacing(30);
     rootLayout_->addWidget(nickname_,2);

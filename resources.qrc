@@ -3,5 +3,11 @@
         <file>resources/styles/main.qss</file>
         <file>resources/img/user.png</file>
         <file>resources/img/user2.png</file>
+        <file>resources/img/1.png</file>
+        <file>resources/img/2.png</file>
+        <file>resources/img/3.png</file>
+        <file>resources/img/4.png</file>
+        <file>resources/img/5.png</file>
+        <file>resources/img/6.png</file>
     </qresource>
 </RCC>

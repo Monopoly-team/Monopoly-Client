@@ -11,6 +11,7 @@ class PlayerCardGameWidget : public PlayerCardBaseWidget
 {
     Q_OBJECT
 public:
+
     explicit PlayerCardGameWidget(QWidget *parent = nullptr);
     ~PlayerCardGameWidget() override;
 
