@@ -74,3 +74,46 @@ QMainWindow {
     background-color: #3A3D44;
     color: #888888;
 }
+
+#playerCard {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 18px;
+}
+
+#nicknameLabel{
+    color: white;
+    font-size: 35px;
+    font-weight: bold;
+    background: transparent;
+    font-family: Segou UI;
+}
+
+#readyLabel{
+    color: red;
+    font-size: 25px;
+    font-weight: bold;
+    background: transparent;
+    font-family: Segou UI;
+}
+
+#readyButton {
+    background-color: #6C7BFF;
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+
+    font-size: 28px;
+    font-weight: 600;
+
+    padding: 12px 16px;
+}
+
+#readyButton:hover {
+    background-color: #7D8BFF;
+    border: 1px solid rgba(255,255,255,0.18);
+}
+
+#readyButton:pressed {
+    background-color: #5661DD;
+}

@@ -20,6 +20,9 @@ MainWindow::MainWindow(QWidget *parent)
     screens_->setCurrentWidget(loginWidget_);
 
     connect(loginWidget_, &LoginWidget::loginRequested, this, &MainWindow::showMenu);
+    connect(menuWidget_, &MenuWidget::createGameRequested, this, &MainWindow::showLobby);
+    connect(menuWidget_, &MenuWidget::joinGameRequested, this, &MainWindow::showLobby);
+    connect(lobbyWidget_, &LobbyWidget::startRequested, this, &MainWindow::showGame);
 }
 
 MainWindow::~MainWindow() = default;

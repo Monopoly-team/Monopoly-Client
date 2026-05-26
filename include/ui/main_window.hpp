@@ -11,7 +11,6 @@
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 private slots:
     void showLogin();
     void showMenu();

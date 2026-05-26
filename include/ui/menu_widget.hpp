@@ -11,6 +11,10 @@
 
 class MenuWidget : public CenterCardWidget
 {
+    Q_OBJECT
+signals:
+    void joinGameRequested();
+    void createGameRequested();
 public:
     explicit MenuWidget(QWidget* parent = nullptr);
     ~MenuWidget() override;

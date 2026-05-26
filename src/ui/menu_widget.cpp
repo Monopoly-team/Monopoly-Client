@@ -21,7 +21,7 @@ MenuWidget::MenuWidget(QWidget *parent)
     ipEdit_->setMaxLength(24);
     ipEdit_->setFrame(false);
 
-    buttonsLayout_ = new QHBoxLayout(card_);
+    buttonsLayout_ = new QHBoxLayout();
 
     createButton_  = new QPushButton("Создать игру",card_);
     joinButton_    = new QPushButton("Присоединиться к игре",card_);
@@ -48,6 +48,9 @@ MenuWidget::MenuWidget(QWidget *parent)
     cardLayout_->addSpacing(70);
     cardLayout_->addLayout(buttonsLayout_);
     cardLayout_->addStretch();
+
+    connect(createButton_, &QPushButton::clicked, this, &MenuWidget::createGameRequested);
+    connect(joinButton_,   &QPushButton::clicked, this, &MenuWidget::joinGameRequested);
 }
 
 MenuWidget::~MenuWidget() = default;

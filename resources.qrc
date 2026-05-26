@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/styles/main.qss</file>
+        <file>resources/img/user.png</file>
+        <file>resources/img/user2.png</file>
     </qresource>
 </RCC>
