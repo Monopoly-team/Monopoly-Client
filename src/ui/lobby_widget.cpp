@@ -1,5 +1,5 @@
 #include "lobby_widget.hpp"
-#include "player_card_widget.hpp"
+#include "player_card_lobby_widget.hpp"
 #include <QVector>
 
 LobbyWidget::LobbyWidget(QWidget *parent)
@@ -24,11 +24,11 @@ LobbyWidget::LobbyWidget(QWidget *parent)
     playersGrid_->setColumnStretch(0, 0);
     playersGrid_->setColumnStretch(1, 0);
 
-    QVector<PlayerCardWidget*> playerCards_;
+    QVector<PlayerCardLobbyWidget*> playerCards_;
 
     for (int i = 0; i < 6; ++i)
     {
-        auto* playerCard = new PlayerCardWidget(card_);
+        auto* playerCard = new PlayerCardLobbyWidget(card_);
 
         int row = i / 2;
         int col = i % 2;

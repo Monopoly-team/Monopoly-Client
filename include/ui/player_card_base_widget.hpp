@@ -5,19 +5,17 @@
 #include <QFrame>
 #include <QHBoxLayout>
 
-class PlayerCardWidget : public QFrame
+class PlayerCardBaseWidget : public QFrame
 {
     Q_OBJECT
 public:
-    explicit PlayerCardWidget(QWidget *parent = nullptr);
-    ~PlayerCardWidget() override;
+    explicit PlayerCardBaseWidget(QWidget *parent = nullptr);
+    ~PlayerCardBaseWidget() override;
 
     void setNickname(const QString& nickname);
-    void setReady(bool isReady);
-private:
+protected:
     QLabel*      avatar_;
     QLabel*      nickname_;
-    QLabel*      readyStatus_;
     QHBoxLayout* rootLayout_;
 };
 

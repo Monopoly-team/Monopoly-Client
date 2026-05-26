@@ -1,6 +1,6 @@
-#include "player_card_widget.hpp"
+#include "player_card_base_widget.hpp"
 
-PlayerCardWidget::PlayerCardWidget(QWidget *parent)
+PlayerCardBaseWidget::PlayerCardBaseWidget(QWidget *parent)
     : QFrame{parent}
 {
     setFixedHeight(120);
@@ -10,10 +10,8 @@ PlayerCardWidget::PlayerCardWidget(QWidget *parent)
 
     avatar_     = new QLabel("[]",       this);
     nickname_   = new QLabel("Полад",  this);
-    readyStatus_= new QLabel("Не готов", this);
 
     nickname_->setObjectName("nicknameLabel");
-    readyStatus_->setObjectName("readyLabel");
     avatar_->setObjectName("avatar");
     avatar_->setScaledContents(true);
 
@@ -24,18 +22,12 @@ PlayerCardWidget::PlayerCardWidget(QWidget *parent)
     rootLayout_->addWidget(avatar_);
     rootLayout_->addSpacing(30);
     rootLayout_->addWidget(nickname_,2);
-    rootLayout_->addWidget(readyStatus_);
 }
 
-PlayerCardWidget::~PlayerCardWidget() = default;
+PlayerCardBaseWidget::~PlayerCardBaseWidget() = default;
 
-void PlayerCardWidget::setNickname(const QString &nickname)
+void PlayerCardBaseWidget::setNickname(const QString &nickname)
 {
     nickname_->setText(nickname);
-}
-
-void PlayerCardWidget::setReady(bool isReady)
-{
-    isReady ? readyStatus_->setText("Готов") : readyStatus_->setText("Не готов");
 }
 
