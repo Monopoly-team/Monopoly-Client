@@ -20,10 +20,10 @@ bool TcpServerController::startServer(quint16 port)
 {
     if(!server_->listen(QHostAddress::Any,port))
     {
-        qDebug() << "Server start failed" << server_->errorString();
+        qDebug() << "[Server] start failed" << server_->errorString();
         return false;
     }
-    qDebug() << "Server started on port " << port;
+    qDebug() << "[Server] started on port " << port;
     return true;
 }
 
@@ -34,12 +34,12 @@ void TcpServerController::onNewConnection()
         return;
 
     clients_.push_back(clientSocket);
-    qDebug() << "Client accepted:"
+    qDebug() << "[Server] Client accepted:"
              << QHostAddress(clientSocket->peerAddress().toIPv4Address()).toString()
              << clientSocket->peerPort();
 
     connect(clientSocket, &QTcpSocket::disconnected,this,[this,clientSocket](){
-        qDebug() << "Client disconnected"
+        qDebug() << "[Server] Client disconnected"
                  << QHostAddress(clientSocket->peerAddress().toIPv4Address()).toString()
                  << clientSocket->peerPort();
         clients_.removeOne(clientSocket);
