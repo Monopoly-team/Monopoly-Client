@@ -2,7 +2,6 @@
 
 #include "game_widget_components/left_panel_widget.hpp"
 #include "game_widget_components/center_game_widget.hpp"
-#include "game_widget_components/chat_widget.hpp"
 
 #include <QWidget>
 #include <QFrame>
@@ -20,7 +19,6 @@ public:
 private:
     LeftPanelWidget* leftPanelWidget_;
     CenterGameWidget* centerGameWidget_;
-    ChatWidget* chatWidget_;
 
     QHBoxLayout* rootLayout_;
 };
