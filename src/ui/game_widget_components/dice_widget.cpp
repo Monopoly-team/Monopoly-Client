@@ -1,4 +1,4 @@
-#include "dice_widget.hpp"
+#include "game_widget_components/dice_widget.hpp"
 
 #include <QMouseEvent>
 #include <QPixmap>

@@ -9,7 +9,9 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Network)
 
 include_directories(
+    include
     include/ui
+    include/network
 )
 
 file(GLOB_RECURSE SOURCES

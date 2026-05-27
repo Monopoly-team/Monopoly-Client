@@ -1,4 +1,5 @@
 #include "main_window.hpp"
+#include "network/server/tcp_server_controller.hpp"
 
 #include <QApplication>
 #include <QFile>
@@ -12,7 +13,14 @@ int main(int argc, char *argv[])
         a.setStyleSheet(styleFile.readAll());
 
     MainWindow w;
+
+    auto* server = new TcpServerController(&w);
+    server->startServer(7777);
+
+
     w.showMaximized();
 
-    return QCoreApplication::exec();
+
+
+    return a.exec();
 }
