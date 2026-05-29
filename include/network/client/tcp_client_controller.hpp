@@ -29,3 +29,4 @@ public:
 private:
     QTcpSocket* socket_;
 };
+// TODO: Добавить обработку ready_changed и lobby_update на клиенте.

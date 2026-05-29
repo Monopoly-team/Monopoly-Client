@@ -23,12 +23,14 @@ int main(int argc, char *argv[])
         server->startServer(7777);
         auto* client = new TcpClientController(&w);
         client->connectToServer("127.0.0.1",7777);
-
-        QTimer::singleShot(2000,[client](){
+        auto* client2 = new TcpClientController(&w);
+        client2->connectToServer("127.0.0.1",7777);
+        QTimer::singleShot(2000,[client,client2](){
             QJsonObject payload;
 
             payload["nickname"] = "Ilja";
             client->sendMessage(NetworkMessage::create("connection_request",-1,payload));
+            client2->sendMessage(NetworkMessage::create("connection_request",-1,payload));
         });
         QTimer::singleShot(4000,[client](){
             client->disconnectFromServer();
