@@ -95,6 +95,11 @@ void TcpServerController::handleMessage(QTcpSocket *senderSocket, const QJsonObj
         broadcastMessage(message);
         return;
     }
+    if(type == "ready_changed")
+    {
+        handleReadyChanged(senderSocket,message);
+        return;
+    }
     qDebug() << "[Server] unhandled type: " << type;
 }
 
@@ -148,6 +153,26 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
 
 }
 
+void TcpServerController::handleReadyChanged(QTcpSocket *senderSocket, const QJsonObject &message)
+{
+    if(!players_.contains(senderSocket))
+    {
+        qDebug() << "[Server] ready_changed from unknown socket";
+        return;
+    }
+
+    const QJsonObject payload = message["payload"].toObject();
+    const bool ready = payload["ready"].toBool();
+
+    players_[senderSocket].ready = ready;
+
+    qDebug() << "[Server] player"
+             << players_[senderSocket].nickname
+             << "changed ready status to "
+             << ready;
+    broadcastLobbyUpdate();
+}
+
 void TcpServerController::broadcastLobbyUpdate()
 {
     // TODO: шлёт lobby update всем clients_, даже тем, кто ещё не отправил connect_request.
@@ -193,8 +218,3 @@ void TcpServerController::broadcastMessage(const QJsonObject &message)
 
     qDebug() << "[Server] broadcasted " << message["type"].toString();
 }
-
-
-
-
-//TODO: Сделать броадкаст на стороне и клиента и сервера.

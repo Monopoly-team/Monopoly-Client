@@ -39,12 +39,12 @@ LobbyWidget::LobbyWidget(QWidget *parent)
 
         playerCards_.push_back(playerCard);
     }
-    playerCards_[0]->show();
-    playerCards_[1]->show();
-    playerCards_[2]->show();
-    playerCards_[3]->show();
-    playerCards_[4]->show();
-    playerCards_[5]->show();
+    // playerCards_[0]->show();
+    // playerCards_[1]->show();
+    // playerCards_[2]->show();
+    // playerCards_[3]->show();
+    // playerCards_[4]->show();
+    // playerCards_[5]->show();
 
     cardLayout_->addWidget(lobbyTitle_,0,Qt::AlignHCenter);
     cardLayout_->addSpacing(20);

@@ -28,6 +28,7 @@ public:
 private:
     void handleMessage(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleConnectRequest(QTcpSocket* senderSocket, const QJsonObject& message);
+    void handleReadyChanged(QTcpSocket* senderSocket, const QJsonObject& message);
 
     void sendToClient(QTcpSocket* client, const QJsonObject& message);
     void broadcastMessage(const QJsonObject& message);
