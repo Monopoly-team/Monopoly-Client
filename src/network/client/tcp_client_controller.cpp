@@ -2,6 +2,7 @@
 #include "network/network_message.hpp"
 
 #include <QDebug>
+#include <QJsonArray>
 
 TcpClientController::TcpClientController(QObject *parent)
     : QObject(parent)
@@ -45,6 +46,69 @@ void TcpClientController::sendMessage(const QJsonObject &message)
     qDebug() << "[Client] Sent:" << data;
 }
 
+quint16 TcpClientController::playerId() const
+{
+    return playerId_;
+}
+
+void TcpClientController::handleMessage(const QJsonObject& message)
+{
+    const QString& type = message["type"].toString();
+
+    if(type == "connect_accepted")
+    {
+        handleConnectAccepted(message);
+        return;
+    }
+    if(type == "lobby_update")
+    {
+        handleLobbyUpdate(message);
+        return;
+    }
+    if(type == "chat_message")
+    {
+        handleChatMessage(message);
+        return;
+    }
+    qDebug() << "[Client] Unhandled type: " << type;
+}
+
+void TcpClientController::handleConnectAccepted(const QJsonObject &message)
+{
+    const QJsonObject payload = message["payload"].toObject();
+
+    playerId_ = static_cast<quint16>(payload["playerId"].toInt());
+
+    qDebug() << "[Client] assigned playerId: " << playerId_;
+}
+
+void TcpClientController::handleLobbyUpdate(const QJsonObject &message)
+{
+    QVector<ClientLobbyPlayer> players;
+
+    const QJsonObject payload = message["payload"].toObject();
+    const QJsonArray  playersArray;
+
+    for(const QJsonValue& value : playersArray)
+    {
+        const QJsonObject object = value.toObject();
+
+        ClientLobbyPlayer player;
+
+        player.id       = static_cast<quint16>(object["id"].toInt());
+        player.nickname = object["nickname"].toString();
+        player.ready    = object["ready"].toBool();
+
+        players.push_back(player);
+    }
+    emit lobbyUpdate(players);
+}
+
+void TcpClientController::handleChatMessage(const QJsonObject &message)
+{
+    qDebug() << "[Client] chat message:" << message;
+}
+
 void TcpClientController::onConnected()
 {
     qDebug() << "[Client] Connected to server";
@@ -62,15 +126,14 @@ void TcpClientController::onReadyRead()
     while(socket_->canReadLine())
     {
         const QByteArray line = socket_->readLine().trimmed();
-        const QJsonObject message = NetworkMessage::deserialize(line);
+
+        const QJsonObject message =
+            NetworkMessage::deserialize(line);
 
         if(!NetworkMessage::isValid(message))
-        {
-            qDebug() << "[Client] Invalid message from server" << line;
             continue;
-        }
-        qDebug() << "[Client] received " << message;
-        emit messageReceived(message);
+
+        handleMessage(message);
     }
 }
 

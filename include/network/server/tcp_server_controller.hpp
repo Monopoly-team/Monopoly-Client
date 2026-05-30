@@ -7,7 +7,8 @@
 #include <QJsonObject>
 #include <QHash>
 
-struct ServerPlayer{
+struct ServerPlayer
+{
     QString     nickname;
     quint16     id;
     bool        ready = false;

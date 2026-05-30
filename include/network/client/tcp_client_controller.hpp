@@ -3,6 +3,14 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QJsonObject>
+#include <QVector>
+
+struct ClientLobbyPlayer
+{
+    QString     nickname;
+    quint16     id;
+    bool        ready = false;
+};
 
 class TcpClientController : public QObject
 {
@@ -12,6 +20,8 @@ signals:
     void disconnectedFromServer();
     void messageReceived(const QJsonObject& message);
     void errorOccurred(const QString& error);
+    void lobbyUpdate(const QVector<ClientLobbyPlayer>& players);
+
 private slots:
     void onConnected();
     void onDisconnected();
@@ -26,7 +36,14 @@ public:
     void disconnectFromServer();
 
     void sendMessage(const QJsonObject& message);
+    quint16 playerId() const;
+private:
+    void handleMessage(const QJsonObject& message);
+    void handleConnectAccepted(const QJsonObject& message);
+    void handleLobbyUpdate(const QJsonObject& message);
+    void handleChatMessage(const QJsonObject& message);
 private:
     QTcpSocket* socket_;
+    quint16     playerId_ = 0;
 };
 // TODO: Добавить обработку ready_changed и lobby_update на клиенте.
