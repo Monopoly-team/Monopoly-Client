@@ -1,6 +1,10 @@
 #include "lobby_widget.hpp"
-#include "player_card_lobby_widget.hpp"
+
+#include <algorithm>
+
 #include <QVector>
+
+
 
 LobbyWidget::LobbyWidget(QWidget *parent)
     : CenterCardWidget(parent)
@@ -24,8 +28,6 @@ LobbyWidget::LobbyWidget(QWidget *parent)
     playersGrid_->setColumnStretch(0, 0);
     playersGrid_->setColumnStretch(1, 0);
 
-    QVector<PlayerCardLobbyWidget*> playerCards_;
-
     for (int i = 0; i < 6; ++i)
     {
         auto* playerCard = new PlayerCardLobbyWidget(card_);
@@ -39,12 +41,7 @@ LobbyWidget::LobbyWidget(QWidget *parent)
 
         playerCards_.push_back(playerCard);
     }
-    // playerCards_[0]->show();
-    // playerCards_[1]->show();
-    // playerCards_[2]->show();
-    // playerCards_[3]->show();
-    // playerCards_[4]->show();
-    // playerCards_[5]->show();
+    qDebug() << "[Lobby] cards created:" << playerCards_.size();
 
     cardLayout_->addWidget(lobbyTitle_,0,Qt::AlignHCenter);
     cardLayout_->addSpacing(20);
@@ -55,3 +52,19 @@ LobbyWidget::LobbyWidget(QWidget *parent)
 }
 
 LobbyWidget::~LobbyWidget() = default;
+
+void LobbyWidget::updatePlayers(const QVector<ClientLobbyPlayer> &players)
+{
+    qDebug() << "[Lobby] updatePlayers called";
+    for(PlayerCardLobbyWidget* card : playerCards_)
+        card->hide();
+
+    const int count = std::min(players.size(), playerCards_.size());
+
+    for(int i = 0; i < count; ++i)
+    {
+        playerCards_[i]->setNickname(players[i].nickname);
+        playerCards_[i]->setReady(players[i].ready);
+        playerCards_[i]->show();
+    }
+}

@@ -82,10 +82,12 @@ void TcpClientController::handleConnectAccepted(const QJsonObject &message)
 
 void TcpClientController::handleLobbyUpdate(const QJsonObject &message)
 {
+    qDebug() << "[Client] lobby update received";
+    qDebug() << "[Client] lobby update raw:" << message;
     QVector<ClientLobbyPlayer> players;
 
     const QJsonObject payload = message["payload"].toObject();
-    const QJsonArray  playersArray;
+    const QJsonArray  playersArray = payload["players"].toArray();
 
     for(const QJsonValue& value : playersArray)
     {
@@ -99,6 +101,7 @@ void TcpClientController::handleLobbyUpdate(const QJsonObject &message)
 
         players.push_back(player);
     }
+    qDebug() << "[Client] players parsed:" << players.size();
     emit lobbyUpdated(players);
 }
 

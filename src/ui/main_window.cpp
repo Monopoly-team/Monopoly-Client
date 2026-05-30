@@ -32,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     clientController_ = new TcpClientController(this);
     //connect(clientController_, &TcpClientController::lobbyUpdated, lobbyWidget_, &LobbyWidget::updatePlayers);
     connect(clientController_, &TcpClientController::connectedToServer, this, &MainWindow::sendConnectRequest);
+    connect(clientController_, &TcpClientController::lobbyUpdated,lobbyWidget_, &LobbyWidget::updatePlayers);
 }
 
 MainWindow::~MainWindow() = default;

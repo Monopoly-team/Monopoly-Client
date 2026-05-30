@@ -8,7 +8,7 @@
 struct ClientLobbyPlayer
 {
     QString     nickname;
-    quint16     id;
+    quint16     id    = 0;
     bool        ready = false;
 };
 
