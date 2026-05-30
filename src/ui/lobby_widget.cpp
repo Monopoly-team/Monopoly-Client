@@ -48,10 +48,19 @@ LobbyWidget::LobbyWidget(QWidget *parent)
     cardLayout_->addLayout(playersGrid_);
     cardLayout_->addWidget(readyButton_,0,Qt::AlignRight);
 
-    connect(readyButton_, &QPushButton::clicked, this, &LobbyWidget::startRequested);
+    connect(readyButton_, &QPushButton::clicked, this, &LobbyWidget::onReadyChanged);
 }
 
 LobbyWidget::~LobbyWidget() = default;
+
+void LobbyWidget::onReadyChanged()
+{
+    isReady_ = !isReady_;
+
+    readyButton_->setText(isReady_ ? "Не готов" : "Готов");
+
+    emit readyChanged(isReady_);
+}
 
 void LobbyWidget::updatePlayers(const QVector<ClientLobbyPlayer> &players)
 {

@@ -88,13 +88,6 @@ QMainWindow {
     font-family: Segou UI;
 }
 
-#readyLabel{
-    color: red;
-    font-size: 25px;
-    font-weight: bold;
-    background: transparent;
-    font-family: Segou UI;
-}
 
 #readyButton {
     background-color: #6C7BFF;
@@ -204,4 +197,38 @@ QMainWindow {
 #chatInput:focus {
     border: 1px solid #7B8CFF;
     background-color: rgba(255,255,255,0.05);
+}
+
+#readyLabel
+{
+    background: rgba(255,255,255,0.04);
+
+    border-radius: 12px;
+
+
+    font-size: 24px;
+    font-weight: 700;
+
+    font-family: "Segoe UI";
+
+    min-width: 160px;
+    max-width: 160px;
+}
+
+QLabel[ready="true"]
+{
+    color: #6EE7A8;
+
+    border: 1px solid rgba(110,231,168,0.25);
+
+    background: rgba(110,231,168,0.08);
+}
+
+QLabel[ready="false"]
+{
+    color: #FF7B7B;
+
+    border: 1px solid rgba(255,123,123,0.25);
+
+    background: rgba(255,123,123,0.08);
 }
