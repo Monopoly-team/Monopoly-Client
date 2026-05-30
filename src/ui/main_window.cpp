@@ -1,7 +1,8 @@
 #include "main_window.hpp"
 
+
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), serverController_(nullptr)
 {
     screens_        = new QStackedWidget(this);
 
@@ -20,12 +21,36 @@ MainWindow::MainWindow(QWidget *parent)
     screens_->setCurrentWidget(loginWidget_);
 
     connect(loginWidget_, &LoginWidget::loginRequested, this, &MainWindow::showMenu);
-    connect(menuWidget_, &MenuWidget::createGameRequested, this, &MainWindow::showLobby);
-    connect(menuWidget_, &MenuWidget::joinGameRequested, this, &MainWindow::showLobby);
+
+
+    connect(menuWidget_, &MenuWidget::createGameRequested, this, &MainWindow::createGame);
+    connect(menuWidget_, &MenuWidget::joinGameRequested,   this, &MainWindow::joinGame);
+
     connect(lobbyWidget_, &LobbyWidget::startRequested, this, &MainWindow::showGame);
+
+    //Network
+    clientController_ = new TcpClientController(this);
+    //connect(clientController_, &TcpClientController::lobbyUpdated, lobbyWidget_, &LobbyWidget::updatePlayers);
+    connect(clientController_, &TcpClientController::connectedToServer, this, &MainWindow::sendConnectRequest);
 }
 
 MainWindow::~MainWindow() = default;
+
+void MainWindow::sendConnectRequest()
+{
+    QJsonObject payload;
+    payload["nickname"] = menuWidget_->nickname();
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "connect_request",
+            0,
+            payload
+            )
+        );
+
+    showLobby();
+}
 
 void MainWindow::showLogin()
 {
@@ -42,5 +67,21 @@ void MainWindow::showLobby()
 void MainWindow::showGame()
 {
     screens_->setCurrentWidget(gameWidget_);
+}
+
+void MainWindow::createGame()
+{
+    if(!serverController_)
+    {
+        serverController_ = new TcpServerController(this);
+        serverController_->startServer(7777);
+    }
+    clientController_->connectToServer("127.0.0.1",7777);
+}
+
+void MainWindow::joinGame()
+{
+    QString ip = menuWidget_->serverIp();
+    clientController_->connectToServer(ip,7777);
 }
 

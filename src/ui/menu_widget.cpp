@@ -54,3 +54,13 @@ MenuWidget::MenuWidget(QWidget *parent)
 }
 
 MenuWidget::~MenuWidget() = default;
+
+QString MenuWidget::serverIp() const
+{
+    return ipEdit_->text().trimmed();
+}
+
+QString MenuWidget::nickname() const
+{
+    return nameEdit_->text().trimmed();
+}

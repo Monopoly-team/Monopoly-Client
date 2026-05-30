@@ -20,7 +20,7 @@ signals:
     void disconnectedFromServer();
     void messageReceived(const QJsonObject& message);
     void errorOccurred(const QString& error);
-    void lobbyUpdate(const QVector<ClientLobbyPlayer>& players);
+    void lobbyUpdated(const QVector<ClientLobbyPlayer>& players);
 
 private slots:
     void onConnected();

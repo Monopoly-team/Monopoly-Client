@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     MainWindow w;
 
     //test net
-    {
+/*    {
         auto* server = new TcpServerController(&w);
         server->startServer(7777);
         auto* client = new TcpClientController(&w);
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         QTimer::singleShot(4000,[client](){
             client->disconnectFromServer();
         });
-    }//end of testing net
+    }*///end of testing net
 
 
     w.showMaximized();

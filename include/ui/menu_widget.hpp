@@ -18,6 +18,9 @@ signals:
 public:
     explicit MenuWidget(QWidget* parent = nullptr);
     ~MenuWidget() override;
+    QString serverIp() const;
+    QString nickname() const;
+
 private:
     QLabel*         menuLabel_;
 

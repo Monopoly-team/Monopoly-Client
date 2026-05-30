@@ -13,8 +13,6 @@ TcpClientController::TcpClientController(QObject *parent)
     connect(socket_, &QTcpSocket::disconnected, this, &TcpClientController::onDisconnected);
     connect(socket_, &QTcpSocket::readyRead,    this, &TcpClientController::onReadyRead);
     connect(socket_, &QTcpSocket::errorOccurred,this, &TcpClientController::onErrorOccurred);
-
-
 }
 
 TcpClientController::~TcpClientController() = default;
@@ -101,7 +99,7 @@ void TcpClientController::handleLobbyUpdate(const QJsonObject &message)
 
         players.push_back(player);
     }
-    emit lobbyUpdate(players);
+    emit lobbyUpdated(players);
 }
 
 void TcpClientController::handleChatMessage(const QJsonObject &message)

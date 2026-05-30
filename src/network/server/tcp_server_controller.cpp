@@ -118,6 +118,7 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
         payload["message"] = "Лобби заполнено";
 
         sendToClient(senderSocket, NetworkMessage::create("error", 0, payload));
+        senderSocket->disconnectFromHost();
         return;
     }
 
