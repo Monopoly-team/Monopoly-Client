@@ -22,6 +22,8 @@ signals:
     void errorOccurred(const QString& error);
     void lobbyUpdated(const QVector<ClientLobbyPlayer>& players);
     void gameStarted();
+    void countdownUpdated(int secondsLeft);
+    void countdownCancelled();
 private slots:
     void onConnected();
     void onDisconnected();

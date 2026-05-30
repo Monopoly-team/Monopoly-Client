@@ -215,6 +215,15 @@ QMainWindow {
     max-width: 160px;
 }
 
+#waitingLabel
+{
+    color: white;
+    font-size: 27px;
+    font-weight: bold;
+    background: transparent;
+    font-family: Segou UI;
+}
+
 QLabel[ready="true"]
 {
     color: #6EE7A8;

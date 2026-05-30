@@ -10,6 +10,10 @@ LobbyWidget::LobbyWidget(QWidget *parent)
     : CenterCardWidget(parent)
 {
     card_->setMinimumSize(1200,600);
+    bottomLayout_ = new QHBoxLayout();
+
+    countdownLabel_ = new QLabel("Ожидание игроков...",card_);
+    countdownLabel_->setObjectName("waitingLabel");
 
     lobbyTitle_  = new QLabel("Лобби",card_);
     lobbyTitle_->setAlignment(Qt::AlignTop);
@@ -18,6 +22,10 @@ LobbyWidget::LobbyWidget(QWidget *parent)
     readyButton_ = new QPushButton("Готов",card_);
     readyButton_->setObjectName("readyButton");
     readyButton_->setFixedSize(420,150);
+
+
+    bottomLayout_->addWidget(countdownLabel_,Qt::AlignCenter);
+    bottomLayout_->addWidget(readyButton_);
 
     playersGrid_ = new QGridLayout();
     playersGrid_->setHorizontalSpacing(20);
@@ -46,7 +54,7 @@ LobbyWidget::LobbyWidget(QWidget *parent)
     cardLayout_->addWidget(lobbyTitle_,0,Qt::AlignHCenter);
     cardLayout_->addSpacing(20);
     cardLayout_->addLayout(playersGrid_);
-    cardLayout_->addWidget(readyButton_,0,Qt::AlignRight);
+    cardLayout_->addLayout(bottomLayout_);
 
     connect(readyButton_, &QPushButton::clicked, this, &LobbyWidget::onReadyChanged);
 }
@@ -76,4 +84,16 @@ void LobbyWidget::updatePlayers(const QVector<ClientLobbyPlayer> &players)
         playerCards_[i]->setReady(players[i].ready);
         playerCards_[i]->show();
     }
+}
+
+void LobbyWidget::updateCountdown(int secondsLeft)
+{
+    countdownLabel_->setText(
+        QString("Начало через %1").arg(secondsLeft)
+        );
+}
+
+void LobbyWidget::cancelCountdown()
+{
+    countdownLabel_->setText("Ожидание игроков...");
 }

@@ -15,6 +15,8 @@ signals:
     void readyChanged(bool ready);
 public slots:
     void updatePlayers(const QVector<ClientLobbyPlayer>& players);
+    void updateCountdown(int secondsLeft);
+    void cancelCountdown();
 private slots:
     void onReadyChanged();
 public:
@@ -22,8 +24,10 @@ public:
     ~LobbyWidget() override; 
 private:
     QPushButton*    readyButton_;
+    QLabel*         countdownLabel_;
     QLabel*         lobbyTitle_;
     QGridLayout*    playersGrid_;
+    QHBoxLayout*    bottomLayout_;
 
     QVector<PlayerCardLobbyWidget*> playerCards_;
     bool isReady_ = false;

@@ -12,7 +12,9 @@ TcpServerController::TcpServerController(QObject *parent)
     : QObject(parent)
 {
     server_ = new QTcpServer(this);
+    startCountdownTimer_ = new QTimer(this);
 
+    connect(startCountdownTimer_, &QTimer::timeout, this, &TcpServerController::onCountdownTick);
     connect(server_, &QTcpServer::newConnection, this, &TcpServerController::onNewConnection);
 }
 
@@ -90,6 +92,34 @@ void TcpServerController::onReadyRead()
 
         handleMessage(clientSocket, message);
     }
+}
+
+void TcpServerController::onCountdownTick()
+{
+    if(!areAllPlayersReady())
+    {
+        cancelCountdown();
+        return;
+    }
+    --countdownSecondsLeft_;
+
+    if(countdownSecondsLeft_ <= 0)
+    {
+        countdownActive_ = false;
+        startCountdownTimer_->stop();
+
+        startGame();
+        return;
+    }
+    QJsonObject payload;
+    payload["secondsLeft"] = countdownSecondsLeft_;
+    broadcastMessage(
+        NetworkMessage::create(
+            "countdown_update",
+            SERVER_ID,
+            payload
+            )
+        );
 }
 
 
@@ -259,14 +289,14 @@ void TcpServerController::broadcastLobbyUpdate()
 
 void TcpServerController::checkGameStart()
 {
-    if(players_.size() < 2 )
-        return;
-    for(const ServerPlayer& player : players_)
+    if (areAllPlayersReady())
     {
-        if(!player.ready)
-            return;
+        startCountdown();
     }
-    startGame();
+    else
+    {
+        cancelCountdown();
+    }
 }
 
 void TcpServerController::startGame()
@@ -281,6 +311,53 @@ void TcpServerController::startGame()
                 payload
             )
         );
+}
+
+void TcpServerController::startCountdown()
+{
+    if(countdownActive_)
+        return;
+    countdownActive_ = true;
+    countdownSecondsLeft_ = 5;
+
+    QJsonObject payload;
+    payload["secondsLeft"] = countdownSecondsLeft_;
+    broadcastMessage(
+        NetworkMessage::create(
+                "countdown_update",
+                SERVER_ID,
+                payload
+            )
+        );
+    startCountdownTimer_->start(1000);
+}
+
+void TcpServerController::cancelCountdown()
+{
+    if (!countdownActive_)
+        return;
+    countdownActive_ = false;
+    startCountdownTimer_->stop();
+
+    broadcastMessage(
+        NetworkMessage::create(
+            "countdown_cancelled",
+            SERVER_ID,
+            {}
+            )
+        );
+}
+
+bool TcpServerController::areAllPlayersReady() const
+{
+    if(players_.size() < 2)
+        return false;
+    for(const ServerPlayer& player : players_)
+    {
+        if(!player.ready)
+            return false;
+    }
+    return true;
 }
 
 

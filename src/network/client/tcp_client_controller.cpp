@@ -73,6 +73,17 @@ void TcpClientController::handleMessage(const QJsonObject& message)
         handleGameStarted(message);
         return;
     }
+    if(type == "countdown_update")
+    {
+        const QJsonObject payload = message["payload"].toObject();
+        emit countdownUpdated(payload["secondsLeft"].toInt());
+        return;
+    }
+    if(type == "countdown_cancelled")
+    {
+        emit countdownCancelled();
+        return;
+    }
     qDebug() << "[Client] Unhandled type: " << type;
 }
 
