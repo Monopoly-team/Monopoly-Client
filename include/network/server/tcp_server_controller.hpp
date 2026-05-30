@@ -48,3 +48,4 @@ private:
     QTcpSocket*                         admin_ = nullptr;
 };
 
+//TODO: Отправлять серверу список игроков

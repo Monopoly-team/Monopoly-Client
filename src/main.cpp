@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
     }*///end of testing net
 
 
+
     w.showMaximized();
 
 

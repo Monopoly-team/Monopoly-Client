@@ -2,6 +2,7 @@
 #include "network/network_message.hpp"
 #include "network_constants.hpp"
 
+#include <QTimer>
 #include <QHostAddress>
 #include <QDebug>
 #include <QJsonArray>
@@ -135,11 +136,11 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
         if(admin_ != nullptr)
         {
             QJsonObject deniedPayload;
-            deniedPayload["error"]   = "admin_already_connected";
+            deniedPayload["code"]   = "admin_already_connected";
             deniedPayload["message"] = "admin already exists";
             sendToClient(senderSocket,
                          NetworkMessage::create(
-                             "connect_accepted",
+                             "error",
                              SERVER_ID,
                              deniedPayload
                              )
@@ -149,19 +150,18 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
             return;
         }
 
-
-
         QJsonObject acceptedPayload;
         acceptedPayload["access"] = "accepted";
         sendToClient(senderSocket,
                      NetworkMessage::create(
-                        "connect_accpeted",
+                        "connect_accept",
                         SERVER_ID,
                         acceptedPayload
                          )
                      );
         admin_ = senderSocket;
         qDebug() << "[Server] Admin connected successfully";
+
         return;
     }
 
