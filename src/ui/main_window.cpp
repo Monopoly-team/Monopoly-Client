@@ -1,4 +1,5 @@
 #include "main_window.hpp"
+#include "network_constants.hpp"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -26,16 +27,33 @@ MainWindow::MainWindow(QWidget *parent)
     connect(menuWidget_, &MenuWidget::createGameRequested, this, &MainWindow::createGame);
     connect(menuWidget_, &MenuWidget::joinGameRequested,   this, &MainWindow::joinGame);
 
-    connect(lobbyWidget_, &LobbyWidget::startRequested, this, &MainWindow::showGame);
-
     //Network
     clientController_ = new TcpClientController(this);
-    //connect(clientController_, &TcpClientController::lobbyUpdated, lobbyWidget_, &LobbyWidget::updatePlayers);
+
     connect(clientController_, &TcpClientController::connectedToServer, this, &MainWindow::sendConnectRequest);
     connect(clientController_, &TcpClientController::lobbyUpdated,lobbyWidget_, &LobbyWidget::updatePlayers);
+    connect(clientController_, &TcpClientController::gameStarted,this, &MainWindow::showGame);
+    connect(lobbyWidget_, &LobbyWidget::readyChanged,this, &MainWindow::onReadyChanged);
 }
 
+
+
 MainWindow::~MainWindow() = default;
+
+void MainWindow::onReadyChanged(bool ready)
+{
+
+    QJsonObject payload;
+    payload["ready"] = ready;
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "ready_changed",
+            clientController_->playerId(),
+            payload
+            )
+        );
+}
 
 void MainWindow::sendConnectRequest()
 {
@@ -45,7 +63,7 @@ void MainWindow::sendConnectRequest()
     clientController_->sendMessage(
         NetworkMessage::create(
             "connect_request",
-            0,
+            SERVER_ID,
             payload
             )
         );

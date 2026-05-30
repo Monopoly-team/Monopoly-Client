@@ -24,6 +24,7 @@ private slots:
     void createGame();
     void joinGame();
     void sendConnectRequest();
+    void onReadyChanged(bool ready);
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;

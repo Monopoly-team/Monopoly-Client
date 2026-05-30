@@ -1,5 +1,6 @@
 #include "network/server/tcp_server_controller.hpp"
 #include "network/network_message.hpp"
+#include "network_constants.hpp"
 
 #include <QHostAddress>
 #include <QDebug>
@@ -41,20 +42,31 @@ void TcpServerController::onNewConnection()
              << QHostAddress(clientSocket->peerAddress().toIPv4Address()).toString()
              << clientSocket->peerPort();
 
-    connect(clientSocket, &QTcpSocket::disconnected,this,[this,clientSocket](){
-        qDebug() << "[Server] Client disconnected"
-                 << QHostAddress(clientSocket->peerAddress().toIPv4Address()).toString()
-                 << clientSocket->peerPort();
-        clients_.removeOne(clientSocket);
+    connect(clientSocket, &QTcpSocket::disconnected,this, &TcpServerController::onDisconnect);
+}
 
-        if(players_.contains(clientSocket))
-        {
-            players_.remove(clientSocket);
-            broadcastLobbyUpdate();
-        }
+void TcpServerController::onDisconnect()
+{
+    auto* clientSocket = qobject_cast<QTcpSocket*>(sender());
 
-        clientSocket->deleteLater();
-    });
+    qDebug() << "[Server] Client disconnected"
+             << QHostAddress(clientSocket->peerAddress().toIPv4Address()).toString()
+             << clientSocket->peerPort();
+
+    clients_.removeOne(clientSocket);
+
+    if(admin_==clientSocket)
+    {
+        qDebug() << "[Server] Admin Disconnected";
+        admin_ = nullptr;
+    }
+    else if(players_.contains(clientSocket))
+    {
+        players_.remove(clientSocket);
+        broadcastLobbyUpdate();
+    }
+
+    clientSocket->deleteLater();
 }
 
 void TcpServerController::onReadyRead()
@@ -78,6 +90,8 @@ void TcpServerController::onReadyRead()
         handleMessage(clientSocket, message);
     }
 }
+
+
 
 void TcpServerController::handleMessage(QTcpSocket *senderSocket, const QJsonObject &message)
 {
@@ -105,13 +119,53 @@ void TcpServerController::handleMessage(QTcpSocket *senderSocket, const QJsonObj
 
 void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const QJsonObject &message)
 {
+
+    const QJsonObject   payload  = message["payload"].toObject();
+    QString             nickname = payload["nickname"].toString().trimmed();
+    const quint16       senderId = static_cast<quint16>(message["senderId"].toInt());
+
     if(players_.contains(senderSocket))
     {
         qDebug() << "[Server] socket already exist as player";
         return;
     }
 
-    if (players_.size() >= 6)
+    if(senderId == ADMIN_ID)
+    {
+        if(admin_ != nullptr)
+        {
+            QJsonObject deniedPayload;
+            deniedPayload["error"]   = "admin_already_connected";
+            deniedPayload["message"] = "admin already exists";
+            sendToClient(senderSocket,
+                         NetworkMessage::create(
+                             "connect_accepted",
+                             SERVER_ID,
+                             deniedPayload
+                             )
+                         );
+            senderSocket->disconnectFromHost();
+            qDebug() << "[Server] admin limit reached. Disconnected socket";
+            return;
+        }
+
+
+
+        QJsonObject acceptedPayload;
+        acceptedPayload["access"] = "accepted";
+        sendToClient(senderSocket,
+                     NetworkMessage::create(
+                        "connect_accpeted",
+                        SERVER_ID,
+                        acceptedPayload
+                         )
+                     );
+        admin_ = senderSocket;
+        qDebug() << "[Server] Admin connected successfully";
+        return;
+    }
+
+    if (players_.size() >= MAX_PLAYERS)
     {
         QJsonObject payload;
         payload["code"] = "lobby_full";
@@ -122,8 +176,7 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
         return;
     }
 
-    const QJsonObject   payload = message["payload"].toObject();
-    QString             nickname = payload["nickname"].toString().trimmed();
+
 
     if(nickname.isEmpty())
     {
@@ -145,7 +198,7 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
     QJsonObject acceptedMessage =
         NetworkMessage::create(
             "connect_accepted",
-            0,
+            SERVER_ID,
             acceptedPayload
         );
 
@@ -172,6 +225,7 @@ void TcpServerController::handleReadyChanged(QTcpSocket *senderSocket, const QJs
              << "changed ready status to "
              << ready;
     broadcastLobbyUpdate();
+    checkGameStart();
 }
 
 void TcpServerController::broadcastLobbyUpdate()
@@ -197,10 +251,36 @@ void TcpServerController::broadcastLobbyUpdate()
     QJsonObject message =
         NetworkMessage::create(
             "lobby_update",
-            0,
+            SERVER_ID,
             payload
         );
     broadcastMessage(message);
+}
+
+void TcpServerController::checkGameStart()
+{
+    if(players_.size() < 2 )
+        return;
+    for(const ServerPlayer& player : players_)
+    {
+        if(!player.ready)
+            return;
+    }
+    startGame();
+}
+
+void TcpServerController::startGame()
+{
+    qDebug() << "[Server] Starting game";
+    QJsonObject payload;
+    payload["playerCount"] = players_.size();
+    broadcastMessage(
+        NetworkMessage::create(
+                "game_started",
+                SERVER_ID,
+                payload
+            )
+        );
 }
 
 

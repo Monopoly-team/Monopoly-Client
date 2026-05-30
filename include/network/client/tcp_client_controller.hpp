@@ -21,7 +21,7 @@ signals:
     void messageReceived(const QJsonObject& message);
     void errorOccurred(const QString& error);
     void lobbyUpdated(const QVector<ClientLobbyPlayer>& players);
-
+    void gameStarted();
 private slots:
     void onConnected();
     void onDisconnected();
@@ -42,6 +42,7 @@ private:
     void handleConnectAccepted(const QJsonObject& message);
     void handleLobbyUpdate(const QJsonObject& message);
     void handleChatMessage(const QJsonObject& message);
+    void handleGameStarted(const QJsonObject& message);
 private:
     QTcpSocket* socket_;
     quint16     playerId_ = 0;

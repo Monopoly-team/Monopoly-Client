@@ -68,6 +68,11 @@ void TcpClientController::handleMessage(const QJsonObject& message)
         handleChatMessage(message);
         return;
     }
+    if(type == "game_started")
+    {
+        handleGameStarted(message);
+        return;
+    }
     qDebug() << "[Client] Unhandled type: " << type;
 }
 
@@ -109,6 +114,17 @@ void TcpClientController::handleChatMessage(const QJsonObject &message)
 {
     qDebug() << "[Client] chat message:" << message;
 }
+
+void TcpClientController::handleGameStarted(const QJsonObject &message)
+{
+    Q_UNUSED(message);
+
+    qDebug() << "[Client] Game started";
+
+    emit gameStarted();
+}
+
+
 
 void TcpClientController::onConnected()
 {

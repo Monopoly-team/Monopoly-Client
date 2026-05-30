@@ -20,8 +20,10 @@ class TcpServerController : public QObject
 private slots:
     void onNewConnection();
     void onReadyRead();
+
+    void onDisconnect();
 public:
-        TcpServerController(QObject* parent = nullptr);
+    TcpServerController(QObject* parent = nullptr);
     ~TcpServerController() override;
 
     bool startServer(quint16 port);
@@ -35,10 +37,14 @@ private:
     void broadcastMessage(const QJsonObject& message);
 
     void broadcastLobbyUpdate();
+
+    void checkGameStart();
+    void startGame();
 private:
     QTcpServer*                         server_;
     QVector<QTcpSocket*>                clients_;
     QHash<QTcpSocket*, ServerPlayer>    players_;
     quint16                             nextPlayerId_ = 1;
+    QTcpSocket*                         admin_ = nullptr;
 };
 
