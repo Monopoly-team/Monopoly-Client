@@ -18,22 +18,3 @@ QColor BusinessGroupUtils::color(BusinessGroup group)
 
     return QColor("#555555");
 }
-
-QString BusinessGroupUtils::title(BusinessGroup group)
-{
-    switch (group)
-    {
-    case BusinessGroup::Pharmacy:     return "PHARMACY";
-    case BusinessGroup::Clothes:      return "CLOTHES";
-    case BusinessGroup::FoodMarket:   return "FOODMARKET";
-    case BusinessGroup::DarkStore:    return "DARKSTORE";
-    case BusinessGroup::Marketplace:  return "MARKETPLACE";
-    case BusinessGroup::Bank:         return "BANK";
-    case BusinessGroup::GameStudio:   return "GAMESTUDIO";
-    case BusinessGroup::IT:           return "IT";
-    case BusinessGroup::ITEducation:  return "ITEDUCATION";
-    case BusinessGroup::None:         return "";
-    }
-
-    return "";
-}

@@ -9,5 +9,11 @@
         <file>resources/img/4.png</file>
         <file>resources/img/5.png</file>
         <file>resources/img/6.png</file>
+        <file>resources/img/ItTopAcademy.png</file>
+        <file>resources/img/ItTopCollege.png</file>
+        <file>resources/img/ItTopSchool.png</file>
+        <file>resources/img/ItTopUniversity.png</file>
+        <file>resources/img/it_top_school.svg</file>
+        <file>resources/img/it_top_university_accurate.svg</file>
     </qresource>
 </RCC>

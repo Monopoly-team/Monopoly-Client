@@ -1,5 +1,8 @@
 #include "game_widget_components/board_widget.hpp"
+#include "game/models/business_group_utils.hpp"
+#include "game/models/cell_type.hpp"
 
+#include <QPixmap>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QResizeEvent>
@@ -35,6 +38,8 @@ BoardWidget::BoardWidget(QWidget* parent)
     layout->addWidget(chatInput_);
 
     connect(chatInput_, &QLineEdit::returnPressed, this, &BoardWidget::sendMessage);
+    setCells(createDefaultCells());
+
 }
 
 BoardWidget::~BoardWidget() = default;
@@ -47,6 +52,12 @@ void BoardWidget::addEvent(const QString& event)
 void BoardWidget::clearEvents()
 {
     eventsView_->clear();
+}
+
+void BoardWidget::setCells(const QVector<ClientBoardCell>& cells)
+{
+    cells_ = cells;
+    update();
 }
 
 void BoardWidget::sendMessage()
@@ -124,167 +135,381 @@ void BoardWidget::drawCells(QPainter& painter)
     const int startX = (width() - boardSize) / 2;
     const int startY = (height() - boardSize) / 2;
 
-    painter.setPen(QPen(QColor("#202020"), 2));
-    painter.setBrush(QColor("#ebebeb"));
+    // углы
+    drawCellByIndex(painter, QRect(startX + cornerSize + cellWidth * 9,
+                                   startY + cornerSize + cellWidth * 9,
+                                   cornerSize, cornerSize), 0, BoardCellSide::Corner); // bottom-right
 
-    // Углы
-    const int radius = 18;
+    drawCellByIndex(painter, QRect(startX,
+                                   startY + cornerSize + cellWidth * 9,
+                                   cornerSize, cornerSize), 10, BoardCellSide::Corner); // bottom-left
 
-    // TOP LEFT
-    {
-        QPainterPath path;
+    drawCellByIndex(painter, QRect(startX,
+                                   startY,
+                                   cornerSize, cornerSize), 20, BoardCellSide::Corner); // top-left
 
-        path.moveTo(startX + radius, startY);
+    drawCellByIndex(painter, QRect(startX + cornerSize + cellWidth * 9,
+                                   startY,
+                                   cornerSize, cornerSize), 30, BoardCellSide::Corner); // top-right
 
-        path.lineTo(startX + cornerSize, startY);
-        path.lineTo(startX + cornerSize, startY + cornerSize);
-        path.lineTo(startX, startY + cornerSize);
-        path.lineTo(startX, startY + radius);
-
-        path.quadTo(
-            startX,
-            startY,
-            startX + radius,
-            startY
-            );
-
-        painter.drawPath(path);
-    }
-
-    // TOP RIGHT
-    {
-        const int x =
-            startX + cornerSize + cellWidth * 9;
-
-        const int y = startY;
-
-        QPainterPath path;
-
-        path.moveTo(x, y);
-
-        path.lineTo(x + cornerSize - radius, y);
-
-        path.quadTo(
-            x + cornerSize,
-            y,
-            x + cornerSize,
-            y + radius
-            );
-
-        path.lineTo(x + cornerSize, y + cornerSize);
-        path.lineTo(x, y + cornerSize);
-
-        painter.drawPath(path);
-    }
-
-    // BOTTOM LEFT
-    {
-        const int x = startX;
-
-        const int y =
-            startY + cornerSize + cellWidth * 9;
-
-        QPainterPath path;
-
-        path.moveTo(x, y);
-
-        path.lineTo(x + cornerSize, y);
-        path.lineTo(x + cornerSize, y + cornerSize);
-
-        path.lineTo(x + radius, y + cornerSize);
-
-        path.quadTo(
-            x,
-            y + cornerSize,
-            x,
-            y + cornerSize - radius
-            );
-
-        path.lineTo(x, y);
-
-        painter.drawPath(path);
-    }
-
-    // BOTTOM RIGHT
-    {
-        const int x =
-            startX + cornerSize + cellWidth * 9;
-
-        const int y =
-            startY + cornerSize + cellWidth * 9;
-
-        QPainterPath path;
-
-        path.moveTo(x, y);
-
-        path.lineTo(x + cornerSize, y);
-        path.lineTo(
-            x + cornerSize,
-            y + cornerSize - radius
-            );
-
-        path.quadTo(
-            x + cornerSize,
-            y + cornerSize,
-            x + cornerSize - radius,
-            y + cornerSize
-            );
-
-        path.lineTo(x, y + cornerSize);
-        path.lineTo(x, y);
-
-        painter.drawPath(path);
-    }
-
-    // Верхняя сторона
+    // низ: 1..9, идём справа налево
     for (int i = 0; i < 9; ++i)
     {
-        QRect cell(
+        QRect rect(
+            startX + cornerSize + (8 - i) * cellWidth,
+            startY + cornerSize + cellWidth * 9,
+            cellWidth,
+            cornerSize
+            );
+
+        drawCellByIndex(painter, rect, i + 1, BoardCellSide::Bottom);
+    }
+
+    // лево: 11..19, идём снизу вверх
+    for (int i = 0; i < 9; ++i)
+    {
+        QRect rect(
+            startX,
+            startY + cornerSize + (8 - i) * cellWidth,
+            cornerSize,
+            cellWidth
+            );
+
+        drawCellByIndex(painter, rect, 11 + i, BoardCellSide::Left);
+    }
+
+    // верх: 21..29, идём слева направо
+    for (int i = 0; i < 9; ++i)
+    {
+        QRect rect(
             startX + cornerSize + i * cellWidth,
             startY,
             cellWidth,
             cornerSize
             );
 
-        painter.drawRect(cell);
+        drawCellByIndex(painter, rect, 21 + i, BoardCellSide::Top);
     }
 
-    // Правая сторона
+    // право: 31..39, идём сверху вниз
     for (int i = 0; i < 9; ++i)
     {
-        QRect cell(
+        QRect rect(
             startX + cornerSize + cellWidth * 9,
             startY + cornerSize + i * cellWidth,
             cornerSize,
             cellWidth
             );
 
-        painter.drawRect(cell);
+        drawCellByIndex(painter, rect, 31 + i, BoardCellSide::Right);
     }
+}
 
-    // Нижняя сторона
-    for (int i = 0; i < 9; ++i)
+void BoardWidget::drawCell(
+    QPainter& painter,
+    const QRect& rect,
+    const ClientBoardCell* cell,
+    BoardCellSide side
+    )
+{
+    painter.save();
+
+    painter.setPen(QPen(QColor("#202020"), 2));
+    painter.setBrush(QColor("#EBEBEB"));
+    painter.drawRect(rect);
+
+    if (!cell)
     {
-        QRect cell(
-            startX + cornerSize + i * cellWidth,
-            startY + cornerSize + cellWidth * 9,
-            cellWidth,
-            cornerSize
-            );
-
-        painter.drawRect(cell);
+        painter.restore();
+        return;
     }
 
-    // Левая сторона
-    for (int i = 0; i < 9; ++i)
+    const bool isBusiness =
+        cell->type == CellType::Business ||
+        cell->type == CellType::ExtraBusiness;
+
+    const int stripSize = 12;
+    const int priceSize = 28;
+
+    QRect groupRect;
+    QRect priceRect;
+    QRect contentRect = rect.adjusted(6, 6, -6, -6);
+
+    if (isBusiness)
     {
-        QRect cell(
-            startX,
-            startY + cornerSize + i * cellWidth,
-            cornerSize,
-            cellWidth
-            );
+        if (side == BoardCellSide::Bottom)
+        {
+            groupRect = QRect(rect.left(), rect.top(), rect.width(), stripSize);
+            priceRect = QRect(rect.left(), rect.bottom() - priceSize + 1, rect.width(), priceSize);
+            contentRect = rect.adjusted(4, stripSize + 4, -4, -priceSize - 4);
+        }
+        else if (side == BoardCellSide::Top)
+        {
+            priceRect = QRect(rect.left(), rect.top(), rect.width(), priceSize);
+            groupRect = QRect(rect.left(), rect.bottom() - stripSize + 1, rect.width(), stripSize);
+            contentRect = rect.adjusted(4, priceSize + 4, -4, -stripSize - 4);
+        }
+        else if (side == BoardCellSide::Left)
+        {
+            priceRect = QRect(rect.left(), rect.top(), priceSize, rect.height());
+            groupRect = QRect(rect.right() - stripSize + 1, rect.top(), stripSize, rect.height());
+            contentRect = rect.adjusted(priceSize + 4, 4, -stripSize - 4, -4);
+        }
+        else if (side == BoardCellSide::Right)
+        {
+            groupRect = QRect(rect.left(), rect.top(), stripSize, rect.height());
+            priceRect = QRect(rect.right() - priceSize + 1, rect.top(), priceSize, rect.height());
+            contentRect = rect.adjusted(stripSize + 4, 4, -priceSize - 4, -4);
+        }
 
-        painter.drawRect(cell);
+        painter.fillRect(groupRect, BusinessGroupUtils::color(cell->group));
+        painter.fillRect(priceRect, QColor("#333333"));
     }
+
+    painter.setPen(QColor("#151515"));
+    painter.setFont(QFont("Segoe UI", 8, QFont::Bold));
+
+    if (cell->type == CellType::Corner)
+    {
+        painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, cell->name);
+    }
+    else if (cell->type == CellType::Chance)
+    {
+        painter.setPen(QColor("#B56CFF"));
+        painter.setFont(QFont("Segoe UI", 18, QFont::Bold));
+        painter.drawText(rect, Qt::AlignCenter, "?");
+    }
+    else if (cell->type == CellType::CommunityChest)
+    {
+        painter.setPen(QColor("#50C878"));
+        painter.setFont(QFont("Segoe UI", 16, QFont::Bold));
+        painter.drawText(rect, Qt::AlignCenter, "!");
+    }
+    else
+    {
+        if (!cell->imagePath.isEmpty())
+        {
+            QPixmap pixmap(cell->imagePath);
+
+            if (!pixmap.isNull())
+            {
+                QRect imageRect = contentRect.adjusted(2, 2, -2, -2);
+
+                painter.save();
+
+                if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
+                {
+                    painter.translate(imageRect.center());
+
+                    if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
+                        painter.rotate(-90);
+
+                    QRect rotatedRect(
+                        -imageRect.height() / 2,
+                        -imageRect.width() / 2,
+                        imageRect.height(),
+                        imageRect.width()
+                        );
+
+                    painter.drawPixmap(
+                        rotatedRect,
+                        pixmap.scaled(
+                            rotatedRect.size(),
+                            Qt::KeepAspectRatio,
+                            Qt::SmoothTransformation
+                            )
+                        );
+                }
+                else
+                {
+                    painter.drawPixmap(
+                        imageRect,
+                        pixmap.scaled(
+                            imageRect.size(),
+                            Qt::KeepAspectRatio,
+                            Qt::SmoothTransformation
+                            )
+                        );
+                }
+
+                painter.restore();
+            }
+        }
+        else
+        {
+            painter.drawText(
+                contentRect,
+                Qt::AlignCenter | Qt::TextWordWrap,
+                cell->name
+                );
+        }
+    }
+
+    if (isBusiness)
+    {
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Segoe UI", 8, QFont::Bold));
+
+        const QString moneyText =
+            cell->ownerId == 0
+                ? QString("$%1").arg(cell->price)
+                : QString("Rent $%1").arg(cell->rent);
+
+        if (side == BoardCellSide::Left || side == BoardCellSide::Right)
+        {
+            painter.save();
+            painter.translate(priceRect.center());
+
+            if (side == BoardCellSide::Right)
+                painter.rotate(90);
+            else
+                painter.rotate(-90);
+
+            QRect rotatedRect(
+                -priceRect.height() / 2,
+                -priceRect.width() / 2,
+                priceRect.height(),
+                priceRect.width()
+                );
+
+            painter.drawText(rotatedRect, Qt::AlignCenter, moneyText);
+
+            painter.restore();
+        }
+        else
+        {
+            painter.drawText(priceRect, Qt::AlignCenter, moneyText);
+        }
+    }
+
+    painter.restore();
+}
+void BoardWidget::drawCellByIndex(QPainter& painter, const QRect& rect, int index, BoardCellSide side)
+{
+    const ClientBoardCell* cell = nullptr;
+
+    if (index >= 0 && index < cells_.size())
+        cell = &cells_[index];
+
+    drawCell(painter, rect, cell, side);
+}
+
+QVector<ClientBoardCell> BoardWidget::createDefaultCells() const
+{
+    QVector<ClientBoardCell> cells(40);
+
+    auto corner = [&](int id, const QString& name)
+    {
+        cells[id].id = id;
+        cells[id].type = CellType::Corner;
+        cells[id].group = BusinessGroup::None;
+        cells[id].name = name;
+    };
+
+    auto business = [&](int id, const QString& name, BusinessGroup group, int price, int rent, const QString& imagePath = "")
+    {
+        cells[id].id = id;
+        cells[id].type = CellType::Business;
+        cells[id].group = group;
+        cells[id].name = name;
+        cells[id].price = price;
+        cells[id].rent = rent;
+        cells[id].ownerId = 0;
+        cells[id].imagePath = imagePath;
+    };
+
+    auto extraBusiness = [&](int id, const QString& name, BusinessGroup group, int price, int rent, const QString& imagePath = "")
+    {
+        cells[id].id = id;
+        cells[id].type = CellType::ExtraBusiness;
+        cells[id].group = group;
+        cells[id].name = name;
+        cells[id].price = price;
+        cells[id].rent = rent;
+        cells[id].ownerId = 0;
+        cells[id].imagePath = imagePath;
+    };
+
+    auto chance = [&](int id)
+    {
+        cells[id].id = id;
+        cells[id].type = CellType::Chance;
+        cells[id].group = BusinessGroup::None;
+        cells[id].name = "ШАНС";
+    };
+
+    auto chest = [&](int id)
+    {
+        cells[id].id = id;
+        cells[id].type = CellType::CommunityChest;
+        cells[id].group = BusinessGroup::None;
+        cells[id].name = "КАЗНА";
+    };
+
+    corner(0,  "СТАРТ");
+    corner(10, "ТЮРЬМА");
+    corner(20, "ПАРКОВКА");
+    corner(30, "ПОЛИЦИЯ");
+
+    // НИЗ: справа налево
+    business(1, "Апрель",          BusinessGroup::Pharmacy, 100, 10);
+    business(2, "Ригла",      BusinessGroup::Pharmacy, 120, 12);
+    business(3, "Ютека",       BusinessGroup::Pharmacy, 140, 14);
+
+    chance(4);
+
+    extraBusiness(5, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+
+    chest(6);
+
+    business(7, "Lamoda",          BusinessGroup::Clothes, 160, 16);
+    business(8, "H&M",     BusinessGroup::Clothes, 180, 18);
+    business(9, "Gucci",     BusinessGroup::Clothes, 200, 20);
+
+    // ЛЕВО: снизу вверх
+    business(11, "Дикси",    BusinessGroup::FoodMarket, 220, 22);
+    business(12, "Магнит",     BusinessGroup::FoodMarket, 240, 24);
+    business(13, "Пятерочка",    BusinessGroup::FoodMarket, 260, 26);
+
+    chance(14);
+
+    extraBusiness(15, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+
+    chest(16);
+
+    business(17, "ВкусВилл",      BusinessGroup::DarkStore, 280, 28);
+    business(18, "Яндекс Лавка",  BusinessGroup::DarkStore, 300, 30);
+    business(19, "Самокат",     BusinessGroup::DarkStore, 320, 32);
+
+    // ВЕРХ: слева направо
+    business(21, "Ozon",    BusinessGroup::Marketplace, 340, 34);
+    business(22, "Яндекс Маркет",    BusinessGroup::Marketplace, 360, 36);
+    business(23, "Wildberries",    BusinessGroup::Marketplace, 380, 38);
+
+    chance(24);
+
+    extraBusiness(25, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+
+    chest(26);
+
+    business(27, "Озон банк",    BusinessGroup::Bank, 400, 40);
+    business(28, "Сбербанк",    BusinessGroup::Bank, 420, 42);
+    business(29, "Т-Банк",    BusinessGroup::Bank, 440, 44);
+
+    // ПРАВО: сверху вниз
+    business(31, "TCP-Monopoly-Team",    BusinessGroup::GameStudio, 460, 46);
+    business(32, "Rockstar",    BusinessGroup::GameStudio, 480, 48);
+    business(33, "Valve",     BusinessGroup::GameStudio, 500, 50);
+
+    chance(34);
+
+    extraBusiness(35, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+
+    chest(36);
+
+    business(37, "Nvidia",     BusinessGroup::IT, 520, 52);
+    business(38, "OpenAI",    BusinessGroup::IT, 540, 54);
+    business(39, "Microsoft",  BusinessGroup::IT, 560, 56);
+
+    return cells;
 }

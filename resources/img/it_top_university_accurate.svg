@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="335" height="151" viewBox="0 0 335 151">
+  <rect width="335" height="151" fill="#ffffff"/>
+
+  <!-- blue IT square -->
+  <rect x="0" y="0" width="98" height="91" fill="#2f31f2"/>
+  <rect x="18" y="21" width="14" height="50" fill="#ffffff"/>
+  <path d="M45 21 H82 V33 H68 V71 H55 V33 H45 Z" fill="#ffffff"/>
+
+  <!-- top word -->
+  <text x="116" y="83"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="86"
+        font-weight="700"
+        fill="#000000">top</text>
+
+  <!-- blue corner -->
+  <path d="M235 0 H335 V91 H319 V15 H235 Z" fill="#2f31f2"/>
+
+  <!-- UNIVERSITY -->
+  <text x="17" y="150"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="30"
+        font-weight="900"
+        letter-spacing="13"
+        fill="#000000">UNIVERSITY</text>
+</svg>
