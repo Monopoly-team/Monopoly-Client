@@ -95,6 +95,11 @@ void TcpClientController::handleMessage(const QJsonObject& message)
         handleGameEvent(message);
         return;
     }
+    if (type == "game_state")
+    {
+        handleGameState(message);
+        return;
+    }
     qDebug() << "[Client] Unhandled type: " << type;
 }
 
@@ -148,6 +153,33 @@ void TcpClientController::handleGameEvent(const QJsonObject& message)
     const QString text = payload["text"].toString();
 
     emit gameEventReceived(text);
+}
+
+void TcpClientController::handleGameState(const QJsonObject& message)
+{
+    QVector<ClientGamePlayer> players;
+
+    const QJsonObject payload = message["payload"].toObject();
+    const QJsonArray playersArray = payload["players"].toArray();
+
+    for (const QJsonValue& value : playersArray)
+    {
+        const QJsonObject object = value.toObject();
+
+        ClientGamePlayer player;
+
+        player.id = static_cast<quint16>(object["id"].toInt());
+        player.nickname = object["nickname"].toString();
+        player.balance = object["balance"].toInt();
+        player.position = static_cast<quint8>(object["position"].toInt());
+        player.color = object["color"].toString();
+
+        players.push_back(player);
+    }
+
+    qDebug() << "[Client] game_state players parsed:" << players.size();
+
+    emit gamePlayersUpdated(players);
 }
 
 void TcpClientController::handleGameStarted(const QJsonObject &message)

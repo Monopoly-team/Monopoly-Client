@@ -21,3 +21,8 @@ void GameWidget::addEvent(const QString& event)
 {
     centerGameWidget_->addEvent(event);
 }
+
+void GameWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
+{
+    leftPanelWidget_->updatePlayers(players);
+}

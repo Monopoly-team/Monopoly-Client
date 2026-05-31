@@ -1,4 +1,5 @@
 #include "game_widget_components/left_panel_widget.hpp"
+
 #include <QRandomGenerator>
 LeftPanelWidget::LeftPanelWidget(QWidget *parent)
     : QWidget(parent)
@@ -7,12 +8,6 @@ LeftPanelWidget::LeftPanelWidget(QWidget *parent)
     rootLayout_  = new QVBoxLayout(this);
 
     rootLayout_->addWidget(playersList_);
-    playersList_->setPlayer(0,"Polad",1333);
-    playersList_->setPlayer(1,"Poladjan",4324);
-    playersList_->setPlayer(2,"Poladin",124324);
-    playersList_->setPlayer(3,"Poladius",324234);
-    playersList_->setPlayer(4,"Poladik",12123123345);
-    playersList_->setPlayer(5,"Poladick",12345);
     playersList_ = new PlayersListWidget(this);
     diceWidget_ = new DiceWidget(this);
 
@@ -27,3 +22,8 @@ LeftPanelWidget::LeftPanelWidget(QWidget *parent)
 }
 
 LeftPanelWidget::~LeftPanelWidget()= default;
+
+void LeftPanelWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
+{
+    playersList_->updatePlayers(players);
+}

@@ -1,5 +1,5 @@
 #include "players_list_widget.hpp"
-
+#include <algorithm>
 PlayersListWidget::PlayersListWidget(QWidget* parent)
     : QFrame(parent)
 {
@@ -49,4 +49,19 @@ void PlayersListWidget::clearPlayer(int index)
         return;
 
     playerCards_[index]->hide();
+}
+
+void PlayersListWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
+{
+    for (auto* card : playerCards_)
+        card->hide();
+
+    const int count = std::min(players.size(), playerCards_.size());
+
+    for (int i = 0; i < count; ++i)
+    {
+        playerCards_[i]->setNickname(players[i].nickname);
+        playerCards_[i]->setBalance(players[i].balance);
+        playerCards_[i]->show();
+    }
 }

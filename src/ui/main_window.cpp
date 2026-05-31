@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(gameWidget_, &GameWidget::messageSent,this, &MainWindow::sendChatMessage);
     connect(clientController_, &TcpClientController::chatMessageReceived,this, &MainWindow::showChatMessage);
     connect(clientController_, &TcpClientController::gameEventReceived,this, &MainWindow::showGameEvent);
+    connect(clientController_, &TcpClientController::gamePlayersUpdated, gameWidget_, &GameWidget::updatePlayers);
 }
 
 

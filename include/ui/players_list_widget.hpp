@@ -5,6 +5,7 @@
 #include <QVector>
 
 #include "player_card_game_widget.hpp"
+#include "network/client/tcp_client_controller.hpp"
 
 class PlayersListWidget : public QFrame
 {
@@ -21,6 +22,7 @@ public:
         );
 
     void clearPlayer(int index);
+    void updatePlayers(const QVector<ClientGamePlayer>& players);
 
 private:
     QVBoxLayout* rootLayout_;

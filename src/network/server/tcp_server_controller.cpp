@@ -302,15 +302,59 @@ void TcpServerController::checkGameStart()
 void TcpServerController::startGame()
 {
     qDebug() << "[Server] Starting game";
-    QJsonObject payload;
-    payload["playerCount"] = players_.size();
+
     broadcastMessage(
         NetworkMessage::create(
-                "game_started",
-                SERVER_ID,
-                payload
+            "game_started",
+            SERVER_ID,
+            {}
             )
         );
+
+    QJsonArray playersArray;
+
+    const QStringList colors =
+        {
+            "#6C7BFF",
+            "#FF6B6B",
+            "#6EE7A8",
+            "#FFD166",
+            "#B56CFF",
+            "#4DDBFF"
+        };
+
+    int index = 0;
+
+    for (const ServerPlayer& player : players_)
+    {
+        QJsonObject playerObject;
+
+        playerObject["id"] = player.id;
+        playerObject["nickname"] = player.nickname;
+        playerObject["balance"] = 1500;
+        playerObject["position"] = 0;
+        playerObject["color"] = colors[index % colors.size()];
+
+        playersArray.append(playerObject);
+
+        ++index;
+    }
+
+    QJsonObject payload;
+
+    payload["status"] = "playing";
+    payload["currentPlayerId"] = 1;
+    payload["players"] = playersArray;
+    payload["cells"] = QJsonArray{};
+
+    broadcastMessage(
+        NetworkMessage::create(
+            "game_state",
+            SERVER_ID,
+            payload
+            )
+        );
+
     QJsonObject eventPayload;
     eventPayload["text"] = "Игра началась";
 

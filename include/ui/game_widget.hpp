@@ -2,6 +2,7 @@
 
 #include "game_widget_components/left_panel_widget.hpp"
 #include "game_widget_components/center_game_widget.hpp"
+#include "network/client/tcp_client_controller.hpp"
 
 #include <QWidget>
 #include <QFrame>
@@ -19,6 +20,7 @@ public:
     ~GameWidget() override;
 
     void addEvent(const QString& event);
+    void updatePlayers(const QVector<ClientGamePlayer>& players);
 private:
     LeftPanelWidget* leftPanelWidget_;
     CenterGameWidget* centerGameWidget_;
