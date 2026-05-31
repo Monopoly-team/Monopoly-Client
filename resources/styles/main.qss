@@ -241,3 +241,69 @@ QLabel[ready="false"]
 
     background: rgba(255,123,123,0.08);
 }
+
+
+/* ==========================
+   QMessageBox
+   ========================== */
+
+QMessageBox
+{
+    background-color: #1B1F36;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+QMessageBox QLabel
+{
+    color: #FFFFFF;
+    background: transparent;
+
+    font-family: "Segoe UI";
+    font-size: 15pt;
+    font-weight: 600;
+}
+
+QMessageBox QLabel#qt_msgbox_label
+{
+    min-width: 350px;
+    padding: 15px;
+}
+
+QMessageBox QPushButton
+{
+    background-color: rgba(255,255,255,0.08);
+
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+
+    min-width: 140px;
+    min-height: 42px;
+
+    font-size: 12pt;
+    font-weight: 600;
+}
+
+QMessageBox QPushButton:hover
+{
+    background-color: rgba(255,255,255,0.12);
+}
+
+QMessageBox QPushButton:pressed
+{
+    background-color: rgba(255,255,255,0.18);
+}
+
+QMessageBox QLabel#qt_msgbox_label
+{
+    min-width: 450px;
+    max-width: 450px;
+
+    padding: 15px;
+
+    color: white;
+
+    font-size: 14pt;
+    font-weight: 500;
+}

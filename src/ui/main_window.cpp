@@ -1,6 +1,7 @@
 #include "main_window.hpp"
 #include "network_constants.hpp"
 
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), serverController_(nullptr)
@@ -40,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(clientController_, &TcpClientController::chatMessageReceived,this, &MainWindow::showChatMessage);
     connect(clientController_, &TcpClientController::gameEventReceived,this, &MainWindow::showGameEvent);
     connect(clientController_, &TcpClientController::gamePlayersUpdated, gameWidget_, &GameWidget::updatePlayers);
+    connect(clientController_, &TcpClientController::errorOccurred, this, &MainWindow::showNetworkError);
+    connect(clientController_, &TcpClientController::disconnectedFromServer, this, &MainWindow::handleServerDisconnected);
 }
 
 
@@ -80,6 +83,29 @@ void MainWindow::showChatMessage(const QString& nickname, const QString& text)
     gameWidget_->addEvent(
         QString("[%1] %2").arg(nickname, text)
         );
+}
+
+void MainWindow::showNetworkError(const QString& message)
+{
+    QMessageBox::warning(
+        this,
+        "Ошибка подключения",
+        message.isEmpty() ? "Произошла ошибка сети" : message
+        );
+}
+
+void MainWindow::handleServerDisconnected()
+{
+    if (screens_->currentWidget() == loginWidget_)
+        return;
+
+    QMessageBox::warning(
+        this,
+        "Соединение потеряно",
+        "Подключение к серверу было закрыто."
+        );
+
+    showMenu();
 }
 
 void MainWindow::showGameEvent(const QString& text)
@@ -128,6 +154,11 @@ void MainWindow::createGame()
     if (!serverController_->startServer(7777))
     {
         qDebug() << "[MainWindow] Cannot create game: server already running";
+        QMessageBox::warning(
+            this,
+            "Ошибка создания сервера",
+            "Сервер уже запущен на этом порту."
+            );
         return;
     }
 

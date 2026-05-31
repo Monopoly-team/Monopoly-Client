@@ -60,6 +60,7 @@ private:
     void handleChatMessage(const QJsonObject& message);
     void handleGameEvent(const QJsonObject& message);
     void handleGameState(const QJsonObject& message);
+    void handleError(const QJsonObject& message);
 private:
     QTcpSocket* socket_;
     quint16     playerId_ = 0;
