@@ -33,6 +33,7 @@ private:
     void handleMessage(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleConnectRequest(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleReadyChanged(QTcpSocket* senderSocket, const QJsonObject& message);
+    void handleChatMessage(QTcpSocket* senderSocket, const QJsonObject &message);
 
     void sendToClient(QTcpSocket* client, const QJsonObject& message);
     void broadcastMessage(const QJsonObject& message);
@@ -53,6 +54,7 @@ private:
     QTimer*                             startCountdownTimer_;
     int                                 countdownSecondsLeft_   = 5;
     bool                                countdownActive_        = false;
+
 };
 
 //TODO: Отправлять серверу список игроков

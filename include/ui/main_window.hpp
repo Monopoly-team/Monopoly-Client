@@ -25,6 +25,10 @@ private slots:
     void joinGame();
     void sendConnectRequest();
     void onReadyChanged(bool ready);
+
+    void sendChatMessage(const QString& text);
+    void showGameEvent(const QString& text);
+    void showChatMessage(const QString &nickname, const QString &text);
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;

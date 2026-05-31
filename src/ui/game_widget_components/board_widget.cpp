@@ -34,12 +34,7 @@ BoardWidget::BoardWidget(QWidget* parent)
     layout->addWidget(eventsView_);
     layout->addWidget(chatInput_);
 
-    connect(chatInput_, &QLineEdit::returnPressed,
-            this, &BoardWidget::sendMessage);
-
-    addEvent("Игра началась");
-    addEvent("Polad подключился");
-    addEvent("Ilja бросил кубики");
+    connect(chatInput_, &QLineEdit::returnPressed, this, &BoardWidget::sendMessage);
 }
 
 BoardWidget::~BoardWidget() = default;
@@ -62,9 +57,6 @@ void BoardWidget::sendMessage()
         return;
 
     emit messageSent(message);
-
-    addEvent("Вы: " + message);
-
     chatInput_->clear();
 }
 

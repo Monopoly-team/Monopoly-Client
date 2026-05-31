@@ -11,11 +11,14 @@ class GameWidget : public QWidget
 {
     Q_OBJECT
 signals:
-
+    void messageSent(const QString& message);
 private slots:
 
 public:
     explicit GameWidget(QWidget* parent = nullptr);
+    ~GameWidget() override;
+
+    void addEvent(const QString& event);
 private:
     LeftPanelWidget* leftPanelWidget_;
     CenterGameWidget* centerGameWidget_;

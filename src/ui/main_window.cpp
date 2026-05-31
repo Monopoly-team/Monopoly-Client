@@ -36,6 +36,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(lobbyWidget_, &LobbyWidget::readyChanged,this, &MainWindow::onReadyChanged);
     connect(clientController_, &TcpClientController::countdownUpdated,lobbyWidget_, &LobbyWidget::updateCountdown);
     connect(clientController_, &TcpClientController::countdownCancelled,lobbyWidget_, &LobbyWidget::cancelCountdown);
+    connect(gameWidget_, &GameWidget::messageSent,this, &MainWindow::sendChatMessage);
+    connect(clientController_, &TcpClientController::chatMessageReceived,this, &MainWindow::showChatMessage);
+    connect(clientController_, &TcpClientController::gameEventReceived,this, &MainWindow::showGameEvent);
 }
 
 
@@ -55,6 +58,32 @@ void MainWindow::onReadyChanged(bool ready)
             payload
             )
         );
+}
+
+void MainWindow::sendChatMessage(const QString& text)
+{
+    QJsonObject payload;
+    payload["text"] = text;
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "chat_message",
+            clientController_->playerId(),
+            payload
+            )
+        );
+}
+
+void MainWindow::showChatMessage(const QString& nickname, const QString& text)
+{
+    gameWidget_->addEvent(
+        QString("[%1] %2").arg(nickname, text)
+        );
+}
+
+void MainWindow::showGameEvent(const QString& text)
+{
+    gameWidget_->addEvent("[Событие] " + text);
 }
 
 void MainWindow::sendConnectRequest()
@@ -92,11 +121,15 @@ void MainWindow::showGame()
 
 void MainWindow::createGame()
 {
-    if(!serverController_)
-    {
+    if (!serverController_)
         serverController_ = new TcpServerController(this);
-        serverController_->startServer(7777);
+
+    if (!serverController_->startServer(7777))
+    {
+        qDebug() << "[MainWindow] Cannot create game: server already running";
+        return;
     }
+
     clientController_->connectToServer("127.0.0.1",7777);
 }
 

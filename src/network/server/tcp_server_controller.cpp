@@ -137,7 +137,7 @@ void TcpServerController::handleMessage(QTcpSocket *senderSocket, const QJsonObj
     }
     if(type == "chat_message")
     {
-        broadcastMessage(message);
+        handleChatMessage(senderSocket, message);
         return;
     }
     if(type == "ready_changed")
@@ -311,6 +311,16 @@ void TcpServerController::startGame()
                 payload
             )
         );
+    QJsonObject eventPayload;
+    eventPayload["text"] = "Игра началась";
+
+    broadcastMessage(
+        NetworkMessage::create(
+            "game_event",
+            SERVER_ID,
+            eventPayload
+            )
+        );
 }
 
 void TcpServerController::startCountdown()
@@ -375,4 +385,24 @@ void TcpServerController::broadcastMessage(const QJsonObject &message)
         sendToClient(client, message);
 
     qDebug() << "[Server] broadcasted " << message["type"].toString();
+}
+
+void TcpServerController::handleChatMessage(QTcpSocket* senderSocket, const QJsonObject& message)
+{
+    if (!players_.contains(senderSocket))
+        return;
+
+    QJsonObject payload = message["payload"].toObject();
+
+    payload["playerId"] = players_[senderSocket].id;
+    payload["nickname"] = players_[senderSocket].nickname;
+
+    QJsonObject broadcast =
+        NetworkMessage::create(
+            "chat_message",
+            SERVER_ID,
+            payload
+            );
+
+    broadcastMessage(broadcast);
 }

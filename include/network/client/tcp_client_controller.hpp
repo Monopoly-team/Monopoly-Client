@@ -24,6 +24,8 @@ signals:
     void gameStarted();
     void countdownUpdated(int secondsLeft);
     void countdownCancelled();
+    void chatMessageReceived(const QString& nickname, const QString& text);
+    void gameEventReceived(const QString& text);
 private slots:
     void onConnected();
     void onDisconnected();
@@ -43,8 +45,10 @@ private:
     void handleMessage(const QJsonObject& message);
     void handleConnectAccepted(const QJsonObject& message);
     void handleLobbyUpdate(const QJsonObject& message);
-    void handleChatMessage(const QJsonObject& message);
     void handleGameStarted(const QJsonObject& message);
+
+    void handleChatMessage(const QJsonObject& message);
+    void handleGameEvent(const QJsonObject& message);
 private:
     QTcpSocket* socket_;
     quint16     playerId_ = 0;

@@ -7,6 +7,13 @@ CenterGameWidget::CenterGameWidget(QWidget *parent)
 
     rootLayout_ = new QVBoxLayout(this);
     rootLayout_->addWidget(boardWidget_);
+
+    connect(boardWidget_, &BoardWidget::messageSent, this, &CenterGameWidget::messageSent);
 }
 
 CenterGameWidget::~CenterGameWidget() = default;
+
+void CenterGameWidget::addEvent(const QString& event)
+{
+    boardWidget_->addEvent(event);
+}

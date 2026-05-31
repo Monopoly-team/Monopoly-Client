@@ -84,6 +84,17 @@ void TcpClientController::handleMessage(const QJsonObject& message)
         emit countdownCancelled();
         return;
     }
+    if (type == "chat_message")
+    {
+        handleChatMessage(message);
+        return;
+    }
+
+    if (type == "game_event")
+    {
+        handleGameEvent(message);
+        return;
+    }
     qDebug() << "[Client] Unhandled type: " << type;
 }
 
@@ -121,9 +132,22 @@ void TcpClientController::handleLobbyUpdate(const QJsonObject &message)
     emit lobbyUpdated(players);
 }
 
-void TcpClientController::handleChatMessage(const QJsonObject &message)
+void TcpClientController::handleChatMessage(const QJsonObject& message)
 {
-    qDebug() << "[Client] chat message:" << message;
+    const QJsonObject payload = message["payload"].toObject();
+
+    const QString nickname = payload["nickname"].toString();
+    const QString text = payload["text"].toString();
+
+    emit chatMessageReceived(nickname, text);
+}
+
+void TcpClientController::handleGameEvent(const QJsonObject& message)
+{
+    const QJsonObject payload = message["payload"].toObject();
+    const QString text = payload["text"].toString();
+
+    emit gameEventReceived(text);
 }
 
 void TcpClientController::handleGameStarted(const QJsonObject &message)

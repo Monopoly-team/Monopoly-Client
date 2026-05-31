@@ -3,6 +3,7 @@
 GameWidget::GameWidget(QWidget *parent)
     : QWidget(parent)
 {
+
     rootLayout_ = new QHBoxLayout(this);
 
     leftPanelWidget_    = new LeftPanelWidget(this);
@@ -10,4 +11,13 @@ GameWidget::GameWidget(QWidget *parent)
 
     rootLayout_->addWidget(leftPanelWidget_,1);
     rootLayout_->addWidget(centerGameWidget_,6);
+
+    connect(centerGameWidget_, &CenterGameWidget::messageSent, this, &GameWidget::messageSent);
+}
+
+GameWidget::~GameWidget() = default;
+
+void GameWidget::addEvent(const QString& event)
+{
+    centerGameWidget_->addEvent(event);
 }
