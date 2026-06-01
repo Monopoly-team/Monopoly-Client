@@ -20,7 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     setCentralWidget(screens_);
 
-    screens_->setCurrentWidget(loginWidget_);
+    // screens_->setCurrentWidget(loginWidget_);
+    screens_->setCurrentWidget(gameWidget_);
 
     connect(loginWidget_, &LoginWidget::loginRequested, this, &MainWindow::showMenu);
 

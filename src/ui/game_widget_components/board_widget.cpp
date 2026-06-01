@@ -10,6 +10,7 @@
 #include <QPen>
 #include <QColor>
 #include <QPainterPath>
+#include <QSvgRenderer>
 
 #include <algorithm>
 
@@ -82,7 +83,7 @@ void BoardWidget::updateChatGeometry()
     const int padding = 24;
     const int boardSize = std::min(width(), height()) - padding * 2;
 
-    const int cornerSize = boardSize / 7;
+    const int cornerSize = boardSize / 6;
     const int cellWidth = (boardSize - cornerSize * 2) / 9;
 
     const int startX = (width() - boardSize) / 2;
@@ -94,7 +95,6 @@ void BoardWidget::updateChatGeometry()
         cellWidth * 9,
         cellWidth * 9
         );
-
     centerRect.adjust(24, 24, -24, -24);
 
     eventChatArea_->setGeometry(centerRect);
@@ -129,7 +129,7 @@ void BoardWidget::drawCells(QPainter& painter)
     const int padding = 24;
     const int boardSize = std::min(width(), height()) - padding * 2;
 
-    const int cornerSize = boardSize / 7;
+    const int cornerSize = boardSize / 6;
     const int cellWidth = (boardSize - cornerSize * 2) / 9;
 
     const int startX = (width() - boardSize) / 2;
@@ -152,7 +152,7 @@ void BoardWidget::drawCells(QPainter& painter)
                                    startY,
                                    cornerSize, cornerSize), 30, BoardCellSide::Corner); // top-right
 
-    // низ: 1..9, идём справа налево
+    // низ: 1..9, справа налево
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -165,7 +165,7 @@ void BoardWidget::drawCells(QPainter& painter)
         drawCellByIndex(painter, rect, i + 1, BoardCellSide::Bottom);
     }
 
-    // лево: 11..19, идём снизу вверх
+    // лево: 11..19, снизу вверх
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -178,7 +178,7 @@ void BoardWidget::drawCells(QPainter& painter)
         drawCellByIndex(painter, rect, 11 + i, BoardCellSide::Left);
     }
 
-    // верх: 21..29, идём слева направо
+    // верх: 21..29, слева направо
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -191,7 +191,7 @@ void BoardWidget::drawCells(QPainter& painter)
         drawCellByIndex(painter, rect, 21 + i, BoardCellSide::Top);
     }
 
-    // право: 31..39, идём сверху вниз
+    // право: 31..39, сверху вниз
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -271,8 +271,24 @@ void BoardWidget::drawCell(
 
     if (cell->type == CellType::Corner)
     {
-        painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, cell->name);
+        if (!cell->imagePath.isEmpty())
+        {
+            QSvgRenderer renderer(cell->imagePath);
+
+            if (renderer.isValid())
+            {
+                renderer.render(
+                    &painter,
+                    rect
+                    );
+            }
+        }
+        else
+        {
+            painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, cell->name);
+        }
     }
+
     else if (cell->type == CellType::Chance)
     {
         painter.setPen(QColor("#B56CFF"));
@@ -294,15 +310,14 @@ void BoardWidget::drawCell(
             if (!pixmap.isNull())
             {
                 QRect imageRect = contentRect.adjusted(2, 2, -2, -2);
+                qDebug() << imageRect;
 
                 painter.save();
 
                 if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
                 {
                     painter.translate(imageRect.center());
-
-                    if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
-                        painter.rotate(-90);
+                    painter.rotate(-90);
 
                     QRect rotatedRect(
                         -imageRect.height() / 2,
@@ -311,26 +326,35 @@ void BoardWidget::drawCell(
                         imageRect.width()
                         );
 
-                    painter.drawPixmap(
-                        rotatedRect,
-                        pixmap.scaled(
-                            rotatedRect.size(),
-                            Qt::KeepAspectRatio,
-                            Qt::SmoothTransformation
-                            )
+                    QPixmap scaled = pixmap.scaled(
+                        rotatedRect.size(),
+                        Qt::KeepAspectRatio,
+                        Qt::SmoothTransformation
                         );
+
+                    QPoint pos(
+                        rotatedRect.center().x() - scaled.width() / 2,
+                        rotatedRect.center().y() - scaled.height() / 2
+                        );
+
+                    painter.drawPixmap(pos, scaled);
                 }
                 else
                 {
-                    painter.drawPixmap(
-                        imageRect,
-                        pixmap.scaled(
-                            imageRect.size(),
-                            Qt::KeepAspectRatio,
-                            Qt::SmoothTransformation
-                            )
+                    QPixmap scaled = pixmap.scaled(
+                        imageRect.size(),
+                        Qt::KeepAspectRatio,
+                        Qt::SmoothTransformation
                         );
+
+                    QPoint pos(
+                        imageRect.center().x() - scaled.width() / 2,
+                        imageRect.center().y() - scaled.height() / 2
+                        );
+
+                    painter.drawPixmap(pos, scaled);
                 }
+
 
                 painter.restore();
             }
@@ -398,12 +422,13 @@ QVector<ClientBoardCell> BoardWidget::createDefaultCells() const
 {
     QVector<ClientBoardCell> cells(40);
 
-    auto corner = [&](int id, const QString& name)
+    auto corner = [&](int id, const QString& name,const QString& imagePath = "")
     {
         cells[id].id = id;
         cells[id].type = CellType::Corner;
         cells[id].group = BusinessGroup::None;
         cells[id].name = name;
+        cells[id].imagePath = imagePath;
     };
 
     auto business = [&](int id, const QString& name, BusinessGroup group, int price, int rent, const QString& imagePath = "")
@@ -446,70 +471,70 @@ QVector<ClientBoardCell> BoardWidget::createDefaultCells() const
         cells[id].name = "КАЗНА";
     };
 
-    corner(0,  "СТАРТ");
-    corner(10, "ТЮРЬМА");
-    corner(20, "ПАРКОВКА");
-    corner(30, "ПОЛИЦИЯ");
+    corner(0,  "СТАРТ", ":/resources/img/start.svg");
+    corner(10, "ТЮРЬМА", ":/resources/img/jail.svg");
+    corner(20, "ПАРКОВКА", ":/resources/img/parking.svg");
+    corner(30, "ПОЛИЦИЯ", ":/resources/img/policeman.svg");
 
     // НИЗ: справа налево
-    business(1, "Апрель",          BusinessGroup::Pharmacy, 100, 10);
-    business(2, "Ригла",      BusinessGroup::Pharmacy, 120, 12);
-    business(3, "Ютека",       BusinessGroup::Pharmacy, 140, 14);
+    business(1, "Апрель",          BusinessGroup::Pharmacy, 100, 10, ":/resources/img/aprel.svg");
+    business(2, "ЕАптека",      BusinessGroup::Pharmacy, 120, 12, ":/resources/img/eapteka.png");
+    business(3, "Ригла",       BusinessGroup::Pharmacy, 140, 14, ":/resources/img/rigla.png");
 
     chance(4);
 
-    extraBusiness(5, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+    extraBusiness(5, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_eng.svg");
 
     chest(6);
 
-    business(7, "Lamoda",          BusinessGroup::Clothes, 160, 16);
-    business(8, "H&M",     BusinessGroup::Clothes, 180, 18);
-    business(9, "Gucci",     BusinessGroup::Clothes, 200, 20);
+    business(7, "lamoda",          BusinessGroup::Clothes, 160, 16,":/resources/img/secondhand.svg");
+    business(8, "h&m",     BusinessGroup::Clothes, 180, 18,":/resources/img/lamoda.svg");
+    business(9, "versace",     BusinessGroup::Clothes, 200, 20,":/resources/img/hm.png");
 
     // ЛЕВО: снизу вверх
-    business(11, "Дикси",    BusinessGroup::FoodMarket, 220, 22);
-    business(12, "Магнит",     BusinessGroup::FoodMarket, 240, 24);
-    business(13, "Пятерочка",    BusinessGroup::FoodMarket, 260, 26);
+    business(11, "Дикси",    BusinessGroup::FoodMarket, 220, 22,":/resources/img/diksi.svg");
+    business(12, "Магнит",     BusinessGroup::FoodMarket, 240, 24,":/resources/img/magnit.svg");
+    business(13, "Пятерочка",    BusinessGroup::FoodMarket, 260, 26,":/resources/img/5erochka.svg");
 
     chance(14);
 
-    extraBusiness(15, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+    extraBusiness(15, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_sch.svg");
 
     chest(16);
 
-    business(17, "ВкусВилл",      BusinessGroup::DarkStore, 280, 28);
-    business(18, "Яндекс Лавка",  BusinessGroup::DarkStore, 300, 30);
-    business(19, "Самокат",     BusinessGroup::DarkStore, 320, 32);
+    business(17, "ВкусВилл",      BusinessGroup::DarkStore, 280, 28,":/resources/img/vkusvill.svg");
+    business(18, "Яндекс Лавка",  BusinessGroup::DarkStore, 300, 30,":/resources/img/lavka.svg");
+    business(19, "Самокат123",     BusinessGroup::DarkStore, 320, 32,":/resources/img/samokat.svg");
 
     // ВЕРХ: слева направо
-    business(21, "Ozon",    BusinessGroup::Marketplace, 340, 34);
-    business(22, "Яндекс Маркет",    BusinessGroup::Marketplace, 360, 36);
-    business(23, "Wildberries",    BusinessGroup::Marketplace, 380, 38);
+    business(21, "Ozon",    BusinessGroup::Marketplace, 340, 34,":/resources/img/ozon.svg");
+    business(22, "Яндекс Маркет",    BusinessGroup::Marketplace, 360, 36,":/resources/img/yamarket.svg");
+    business(23, "Wildberries",    BusinessGroup::Marketplace, 380, 38,":/resources/img/wb.svg");
 
     chance(24);
 
-    extraBusiness(25, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+    extraBusiness(25, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_uni.svg");
 
     chest(26);
 
-    business(27, "Озон банк",    BusinessGroup::Bank, 400, 40);
-    business(28, "Сбербанк",    BusinessGroup::Bank, 420, 42);
-    business(29, "Т-Банк",    BusinessGroup::Bank, 440, 44);
+    business(27, "Озон банк",    BusinessGroup::Bank, 400, 40,":/resources/img/ozonbank.svg");
+    business(28, "Альфа-банк",    BusinessGroup::Bank, 420, 42,":/resources/img/alfa.svg");
+    business(29, "Сбербанк",    BusinessGroup::Bank, 440, 44,":/resources/img/sber.svg");
 
     // ПРАВО: сверху вниз
-    business(31, "TCP-Monopoly-Team",    BusinessGroup::GameStudio, 460, 46);
-    business(32, "Rockstar",    BusinessGroup::GameStudio, 480, 48);
-    business(33, "Valve",     BusinessGroup::GameStudio, 500, 50);
+    business(31, "TCP-Monopoly-Team",    BusinessGroup::GameStudio, 460, 46,":/resources/img/cd.svg");
+    business(32, "Rockstar",    BusinessGroup::GameStudio, 480, 48,":/resources/img/rockstar.svg");
+    business(33, "Valve",     BusinessGroup::GameStudio, 500, 50,":/resources/img/valve.svg");
 
     chance(34);
 
-    extraBusiness(35, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
+    extraBusiness(35, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_col.svg");
 
     chest(36);
 
-    business(37, "Nvidia",     BusinessGroup::IT, 520, 52);
-    business(38, "OpenAI",    BusinessGroup::IT, 540, 54);
-    business(39, "Microsoft",  BusinessGroup::IT, 560, 56);
+    business(37, "Nvidia",     BusinessGroup::IT, 520, 52,":/resources/img/nvidia.svg");
+    business(38, "OpenAI",    BusinessGroup::IT, 540, 54,":/resources/img/openai.svg");
+    business(39, "Microsoft",  BusinessGroup::IT, 560, 56,":/resources/img/microsoft.svg");
 
     return cells;
 }

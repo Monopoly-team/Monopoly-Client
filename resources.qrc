@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/styles/main.qss</file>
-        <file>resources/img/user.png</file>
         <file>resources/img/user2.png</file>
         <file>resources/img/1.png</file>
         <file>resources/img/2.png</file>
@@ -9,11 +8,37 @@
         <file>resources/img/4.png</file>
         <file>resources/img/5.png</file>
         <file>resources/img/6.png</file>
-        <file>resources/img/ItTopAcademy.png</file>
-        <file>resources/img/ItTopCollege.png</file>
-        <file>resources/img/ItTopSchool.png</file>
-        <file>resources/img/ItTopUniversity.png</file>
-        <file>resources/img/it_top_school.svg</file>
-        <file>resources/img/it_top_university_accurate.svg</file>
+        <file>resources/img/it_top_uni.svg</file>
+        <file>resources/img/it_top_col.svg</file>
+        <file>resources/img/it_top_eng.svg</file>
+        <file>resources/img/it_top_sch.svg</file>
+        <file>resources/img/aprel.svg</file>
+        <file>resources/img/rigla.png</file>
+        <file>resources/img/eapteka.png</file>
+        <file>resources/img/hm.png</file>
+        <file>resources/img/lamoda.svg</file>
+        <file>resources/img/secondhand.svg</file>
+        <file>resources/img/5erochka.svg</file>
+        <file>resources/img/diksi.svg</file>
+        <file>resources/img/magnit.svg</file>
+        <file>resources/img/lavka.svg</file>
+        <file>resources/img/samokat.svg</file>
+        <file>resources/img/vkusvill.svg</file>
+        <file>resources/img/ozon.svg</file>
+        <file>resources/img/wb.svg</file>
+        <file>resources/img/yamarket.svg</file>
+        <file>resources/img/alfa.svg</file>
+        <file>resources/img/ozonbank.svg</file>
+        <file>resources/img/sber.svg</file>
+        <file>resources/img/rockstar.svg</file>
+        <file>resources/img/valve.svg</file>
+        <file>resources/img/cd.svg</file>
+        <file>resources/img/microsoft.svg</file>
+        <file>resources/img/nvidia.svg</file>
+        <file>resources/img/openai.svg</file>
+        <file>resources/img/start.svg</file>
+        <file>resources/img/jail.svg</file>
+        <file>resources/img/policeman.svg</file>
+        <file>resources/img/parking.svg</file>
     </qresource>
 </RCC>

@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui Network Svg)
 
 include_directories(
     include
@@ -35,4 +35,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Network
     Qt6::Gui
+    Qt6::Svg
 )
