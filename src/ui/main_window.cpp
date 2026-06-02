@@ -20,30 +20,30 @@ MainWindow::MainWindow(QWidget *parent)
 
     setCentralWidget(screens_);
 
-    // screens_->setCurrentWidget(loginWidget_);
-    screens_->setCurrentWidget(gameWidget_);
-
-    connect(loginWidget_, &LoginWidget::loginRequested, this, &MainWindow::showMenu);
+    screens_->setCurrentWidget(menuWidget_);
+    //screens_->setCurrentWidget(gameWidget_);
 
 
-    connect(menuWidget_, &MenuWidget::createGameRequested, this, &MainWindow::createGame);
-    connect(menuWidget_, &MenuWidget::joinGameRequested,   this, &MainWindow::joinGame);
 
-    //Network + UI
+
     clientController_ = new TcpClientController(this);
 
-    connect(clientController_, &TcpClientController::connectedToServer, this, &MainWindow::sendConnectRequest);
-    connect(clientController_, &TcpClientController::lobbyUpdated,lobbyWidget_, &LobbyWidget::updatePlayers);
-    connect(clientController_, &TcpClientController::gameStarted,this, &MainWindow::showGame);
-    connect(lobbyWidget_, &LobbyWidget::readyChanged,this, &MainWindow::onReadyChanged);
-    connect(clientController_, &TcpClientController::countdownUpdated,lobbyWidget_, &LobbyWidget::updateCountdown);
-    connect(clientController_, &TcpClientController::countdownCancelled,lobbyWidget_, &LobbyWidget::cancelCountdown);
-    connect(gameWidget_, &GameWidget::messageSent,this, &MainWindow::sendChatMessage);
-    connect(clientController_, &TcpClientController::chatMessageReceived,this, &MainWindow::showChatMessage);
-    connect(clientController_, &TcpClientController::gameEventReceived,this, &MainWindow::showGameEvent);
-    connect(clientController_, &TcpClientController::gamePlayersUpdated, gameWidget_, &GameWidget::updatePlayers);
-    connect(clientController_, &TcpClientController::errorOccurred, this, &MainWindow::showNetworkError);
-    connect(clientController_, &TcpClientController::disconnectedFromServer, this, &MainWindow::handleServerDisconnected);
+    connect(loginWidget_, &LoginWidget::loginRequested,                         this, &MainWindow::showMenu);
+    connect(menuWidget_, &MenuWidget::createGameRequested,                      this, &MainWindow::createGame);
+    connect(menuWidget_, &MenuWidget::joinGameRequested,                        this, &MainWindow::joinGame);
+    connect(clientController_, &TcpClientController::serverDisconnectRequested, this, &MainWindow::onServerDisconnectRequested);
+    connect(clientController_, &TcpClientController::connectedToServer,         this, &MainWindow::sendConnectRequest);
+    connect(clientController_, &TcpClientController::lobbyUpdated,              lobbyWidget_, &LobbyWidget::updatePlayers);
+    connect(clientController_, &TcpClientController::gameStarted,               this, &MainWindow::showGame);
+    connect(lobbyWidget_,      &LobbyWidget::readyChanged,                      this, &MainWindow::onReadyChanged);
+    connect(clientController_, &TcpClientController::countdownUpdated,          lobbyWidget_, &LobbyWidget::updateCountdown);
+    connect(clientController_, &TcpClientController::countdownCancelled,        lobbyWidget_, &LobbyWidget::cancelCountdown);
+    connect(gameWidget_,       &GameWidget::messageSent,                        this, &MainWindow::sendChatMessage);
+    connect(clientController_, &TcpClientController::chatMessageReceived,       this, &MainWindow::showChatMessage);
+    connect(clientController_, &TcpClientController::gameEventReceived,         this, &MainWindow::showGameEvent);
+    connect(clientController_, &TcpClientController::gamePlayersUpdated,        gameWidget_, &GameWidget::updatePlayers);
+    connect(clientController_, &TcpClientController::errorOccurred,             this, &MainWindow::showNetworkError);
+    connect(clientController_, &TcpClientController::disconnectedFromServer,    this, &MainWindow::handleServerDisconnected);
 }
 
 
@@ -64,7 +64,23 @@ void MainWindow::onReadyChanged(bool ready)
             )
         );
 }
+void MainWindow::onServerDisconnectRequested(const QString& reason)
+{
+    QString text = "Соединение закрыто сервером";
 
+    if(reason == "kicked_by_admin")
+    {
+        text = "Вы были отключены администратором";
+    }
+
+    QMessageBox::warning(
+        this,
+        "Отключение",
+        text
+        );
+
+    showMenu();
+}
 void MainWindow::sendChatMessage(const QString& text)
 {
     QJsonObject payload;
@@ -154,6 +170,11 @@ void MainWindow::createGame()
 
     if (!serverController_->startServer(7777))
     {
+        if (serverController_ && !serverController_->isListening())
+        {
+            serverController_->deleteLater();
+            serverController_ = nullptr;
+        }
         qDebug() << "[MainWindow] Cannot create game: server already running";
         QMessageBox::warning(
             this,

@@ -310,7 +310,6 @@ void BoardWidget::drawCell(
             if (!pixmap.isNull())
             {
                 QRect imageRect = contentRect.adjusted(2, 2, -2, -2);
-                qDebug() << imageRect;
 
                 painter.save();
 

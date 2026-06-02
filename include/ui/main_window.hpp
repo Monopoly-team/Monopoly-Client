@@ -31,6 +31,7 @@ private slots:
     void showChatMessage(const QString &nickname, const QString &text);
     void showNetworkError(const QString& message);
     void handleServerDisconnected();
+    void onServerDisconnectRequested(const QString &reason);
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;

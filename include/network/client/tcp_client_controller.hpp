@@ -36,6 +36,7 @@ signals:
     void chatMessageReceived(const QString& nickname, const QString& text);
     void gameEventReceived(const QString& text);
     void gamePlayersUpdated(const QVector<ClientGamePlayer>& players);
+    void serverDisconnectRequested(const QString& reason);
 private slots:
     void onConnected();
     void onDisconnected();
@@ -56,7 +57,7 @@ private:
     void handleConnectAccepted(const QJsonObject& message);
     void handleLobbyUpdate(const QJsonObject& message);
     void handleGameStarted(const QJsonObject& message);
-
+    void handleServerDisconnect(const QJsonObject &message);
     void handleChatMessage(const QJsonObject& message);
     void handleGameEvent(const QJsonObject& message);
     void handleGameState(const QJsonObject& message);
@@ -64,5 +65,6 @@ private:
 private:
     QTcpSocket* socket_;
     quint16     playerId_ = 0;
+
 };
 // TODO: Добавить обработку ready_changed и lobby_update на клиенте.
