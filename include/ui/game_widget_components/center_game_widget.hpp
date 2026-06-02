@@ -14,6 +14,7 @@ public:
     ~CenterGameWidget() override;
 
     void addEvent(const QString &event);
+    void setPlayers(const QVector<ClientGamePlayer>& players);
 private:
     BoardWidget* boardWidget_;
 

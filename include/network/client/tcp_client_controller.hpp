@@ -14,10 +14,10 @@ struct ClientLobbyPlayer
 
 struct ClientGamePlayer
 {
-    quint16 id = 0;
+    quint16 id          = 0;
     QString nickname;
-    qint32 balance = 0;
-    quint8 position = 0;
+    qint32  balance     = 0;
+    quint8  position    = 0;
     QString color;
 };
 

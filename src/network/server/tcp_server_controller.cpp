@@ -446,8 +446,7 @@ void TcpServerController::startGame()
             SERVER_ID,
             eventPayload
             )
-        );
-
+    );
 }
 
 void TcpServerController::startCountdown()
