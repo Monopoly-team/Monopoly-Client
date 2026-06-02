@@ -68,3 +68,13 @@ void AudioService::playDiceSound()
 {
     diceSound_->play();
 }
+
+void AudioService::setMusicVolume(float volume)
+{
+    musicOutput_->setVolume(volume);
+}
+
+float AudioService::musicVolume() const
+{
+    return musicOutput_->volume();
+}

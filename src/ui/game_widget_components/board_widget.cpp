@@ -92,27 +92,6 @@ void BoardWidget::setPlayers(const QVector<ClientGamePlayer>& players)
     }
 
     players_ = players;
-
-    QTimer::singleShot(
-        3000,
-        this,
-        [this]()
-        {
-            QVector<ClientGamePlayer> players = players_;
-            players[1].position = 15;
-            setPlayers(players);
-        }
-        );
-    QTimer::singleShot(
-        4000,
-        this,
-        [this]()
-        {
-            QVector<ClientGamePlayer> players = players_;
-            players[0].position = 15;
-            setPlayers(players);
-        }
-        );
     update();
 }
 

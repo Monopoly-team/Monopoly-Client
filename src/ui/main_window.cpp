@@ -28,6 +28,23 @@ MainWindow::MainWindow(QWidget *parent)
     screens_->setCurrentWidget(menuWidget_);
     //screens_->setCurrentWidget(gameWidget_);
 
+
+    settingsButton_ = new QPushButton("⚙", this);
+    settingsButton_->setObjectName("settingsButton");
+    settingsButton_->setFixedSize(52, 52);
+    settingsButton_->raise();
+
+    settingsDialog_ = new SettingsDialog(this);
+    settingsDialog_->setMusicVolume(audioService_->musicVolume());
+
+    connect(settingsButton_, &QPushButton::clicked,
+            this, &MainWindow::openSettings);
+
+    connect(settingsDialog_, &SettingsDialog::musicVolumeChanged,
+            audioService_, &AudioService::setMusicVolume);
+
+    updateSettingsButtonGeometry();
+
     clientController_ = new TcpClientController(this);
 
     connect(lobbyWidget_->readyButton(), &QPushButton::clicked, audioService_, &AudioService::playReadyClick);
@@ -213,3 +230,26 @@ void MainWindow::joinGame()
     clientController_->connectToServer(ip,7777);
 }
 
+void MainWindow::openSettings()
+{
+    settingsDialog_->setMusicVolume(audioService_->musicVolume());
+    settingsDialog_->exec();
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    QMainWindow::resizeEvent(event);
+    updateSettingsButtonGeometry();
+}
+
+void MainWindow::updateSettingsButtonGeometry()
+{
+    const int margin = 24;
+
+    settingsButton_->move(
+        width() - settingsButton_->width() - margin,
+        margin
+        );
+
+    settingsButton_->raise();
+}

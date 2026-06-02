@@ -302,3 +302,98 @@ QMessageBox QLabel#qt_msgbox_label
     font-size: 14pt;
     font-weight: 500;
 }
+
+#settingsButton
+{
+    background-color: rgba(255,255,255,0.08);
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 26px;
+
+    font-size: 24px;
+    font-weight: 700;
+}
+
+#settingsButton:hover
+{
+    background-color: rgba(255,255,255,0.14);
+}
+
+#settingsButton:pressed
+{
+    background-color: rgba(255,255,255,0.22);
+}
+
+#settingsDialog
+{
+    background-color: #1B1F36;
+}
+
+#settingsTitle
+{
+    color: white;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+#settingsLabel
+{
+    color: rgba(255,255,255,0.85);
+    font-size: 17px;
+    font-weight: 600;
+}
+
+#settingsValue
+{
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    min-width: 52px;
+}
+
+#settingsCloseButton
+{
+    background-color: #6C7BFF;
+    color: white;
+
+    border: none;
+    border-radius: 14px;
+
+    min-height: 44px;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+#settingsCloseButton:hover
+{
+    background-color: #7D8AFF;
+}
+
+#settingsCloseButton:pressed
+{
+    background-color: #5A69EE;
+}
+
+#settingsSlider::groove:horizontal
+{
+    height: 8px;
+    background: rgba(255,255,255,0.14);
+    border-radius: 4px;
+}
+
+#settingsSlider::handle:horizontal
+{
+    width: 22px;
+    height: 22px;
+    margin: -7px 0;
+    border-radius: 11px;
+    background: #6C7BFF;
+}
+
+#settingsSlider::sub-page:horizontal
+{
+    background: #6C7BFF;
+    border-radius: 4px;
+}

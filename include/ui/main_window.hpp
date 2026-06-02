@@ -12,10 +12,12 @@
 #include "network/server/tcp_server_controller.hpp"
 #include "network/network_message.hpp"
 #include "services/audio_service.hpp"
+#include "ui/settings_dialog.hpp"
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
 private slots:
     void showLogin();
     void showMenu();
@@ -33,6 +35,10 @@ private slots:
     void showNetworkError(const QString& message);
     void handleServerDisconnected();
     void onServerDisconnectRequested(const QString &reason);
+    void openSettings();
+    void updateSettingsButtonGeometry();
+protected:
+    void resizeEvent(QResizeEvent* event) override;
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
@@ -45,6 +51,8 @@ private:
     MenuWidget*     menuWidget_;
     GameWidget*     gameWidget_;
     AudioService*   audioService_;
+    QPushButton*    settingsButton_;
+    SettingsDialog* settingsDialog_;
 
     TcpClientController* clientController_;
     TcpServerController* serverController_ = nullptr;

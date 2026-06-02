@@ -21,6 +21,8 @@ public:
     void playMenuClick();
     void playJoinSound();
     void playDiceSound();
+    void setMusicVolume(float volume);
+    float musicVolume() const;
 
 private:
     QMediaPlayer* musicPlayer_;
