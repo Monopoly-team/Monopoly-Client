@@ -11,6 +11,7 @@
 #include "network/client/tcp_client_controller.hpp"
 #include "network/server/tcp_server_controller.hpp"
 #include "network/network_message.hpp"
+#include "services/audio_service.hpp"
 
 class MainWindow : public QMainWindow
 {
@@ -25,7 +26,7 @@ private slots:
     void joinGame();
     void sendConnectRequest();
     void onReadyChanged(bool ready);
-
+    void onLobbyUpdated(const QVector<ClientLobbyPlayer>& players);
     void sendChatMessage(const QString& text);
     void showGameEvent(const QString& text);
     void showChatMessage(const QString &nickname, const QString &text);
@@ -36,11 +37,14 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 private:
+    int lastLobbyPlayersCount_ = 0;
+
     QStackedWidget* screens_;
     LoginWidget*    loginWidget_;
     LobbyWidget*    lobbyWidget_;
     MenuWidget*     menuWidget_;
     GameWidget*     gameWidget_;
+    AudioService*   audioService_;
 
     TcpClientController* clientController_;
     TcpServerController* serverController_ = nullptr;

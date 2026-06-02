@@ -21,7 +21,9 @@ private slots:
     void onReadyChanged();
 public:
     explicit LobbyWidget(QWidget* parent = nullptr);
-    ~LobbyWidget() override; 
+    ~LobbyWidget() override;
+    QPushButton *readyButton() const;
+
 private:
     QPushButton*    readyButton_;
     QLabel*         countdownLabel_;

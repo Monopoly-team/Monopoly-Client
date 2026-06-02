@@ -1,11 +1,16 @@
 #include "main_window.hpp"
 #include "network_constants.hpp"
 
+
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), serverController_(nullptr)
 {
+
+    audioService_ = new AudioService(this);
+    audioService_->startBackgroundMusic();
+
     screens_        = new QStackedWidget(this);
 
     loginWidget_    = new LoginWidget(this);
@@ -23,14 +28,18 @@ MainWindow::MainWindow(QWidget *parent)
     screens_->setCurrentWidget(menuWidget_);
     //screens_->setCurrentWidget(gameWidget_);
 
-
-
-
     clientController_ = new TcpClientController(this);
 
-    connect(loginWidget_, &LoginWidget::loginRequested,                         this, &MainWindow::showMenu);
-    connect(menuWidget_, &MenuWidget::createGameRequested,                      this, &MainWindow::createGame);
-    connect(menuWidget_, &MenuWidget::joinGameRequested,                        this, &MainWindow::joinGame);
+    connect(lobbyWidget_->readyButton(), &QPushButton::clicked, audioService_, &AudioService::playReadyClick);
+    connect(menuWidget_->createButton(), &QPushButton::clicked, audioService_, &AudioService::playJoinSound);
+    connect(menuWidget_->joinButton(),   &QPushButton::clicked, audioService_, &AudioService::playJoinSound);
+    connect(clientController_,&TcpClientController::gameStarted,audioService_, &AudioService::playGameStart);
+
+
+
+    connect(loginWidget_,      &LoginWidget::loginRequested,                    this, &MainWindow::showMenu);
+    connect(menuWidget_,       &MenuWidget::createGameRequested,                this, &MainWindow::createGame);
+    connect(menuWidget_,       &MenuWidget::joinGameRequested,                  this, &MainWindow::joinGame);
     connect(clientController_, &TcpClientController::serverDisconnectRequested, this, &MainWindow::onServerDisconnectRequested);
     connect(clientController_, &TcpClientController::connectedToServer,         this, &MainWindow::sendConnectRequest);
     connect(clientController_, &TcpClientController::lobbyUpdated,              lobbyWidget_, &LobbyWidget::updatePlayers);
@@ -64,6 +73,17 @@ void MainWindow::onReadyChanged(bool ready)
             )
         );
 }
+
+void MainWindow::onLobbyUpdated(const QVector<ClientLobbyPlayer>& players)
+{
+    if (players.size() > lastLobbyPlayersCount_ && lastLobbyPlayersCount_ > 0)
+        audioService_->playJoinSound();
+
+    lastLobbyPlayersCount_ = players.size();
+
+    lobbyWidget_->updatePlayers(players);
+}
+
 void MainWindow::onServerDisconnectRequested(const QString& reason)
 {
     QString text = "Соединение закрыто сервером";

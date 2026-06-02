@@ -61,6 +61,11 @@ LobbyWidget::LobbyWidget(QWidget *parent)
 
 LobbyWidget::~LobbyWidget() = default;
 
+QPushButton *LobbyWidget::readyButton() const
+{
+    return readyButton_;
+}
+
 void LobbyWidget::onReadyChanged()
 {
     isReady_ = !isReady_;

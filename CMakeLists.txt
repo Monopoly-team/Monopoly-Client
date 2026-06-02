@@ -12,7 +12,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Gui
     Network
     Svg
-
+    Multimedia
 )
 
 include_directories(
@@ -43,5 +43,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Network
     Qt6::Gui
     Qt6::Svg
+    Qt6::Multimedia
 
 )

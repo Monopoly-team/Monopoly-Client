@@ -64,3 +64,13 @@ QString MenuWidget::nickname() const
 {
     return nameEdit_->text().trimmed();
 }
+
+QPushButton *MenuWidget::createButton() const
+{
+    return createButton_;
+}
+
+QPushButton *MenuWidget::joinButton() const
+{
+    return joinButton_;
+}
