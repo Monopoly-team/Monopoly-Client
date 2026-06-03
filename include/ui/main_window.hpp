@@ -44,7 +44,7 @@ private slots:
     void showAuctionUpdate(int cellId, const QString& cellName, int secondsLeft, int currentBid, const QString& highestBidderName);
     void closeAuctionDialog();
     void sendBuyBusinessAction();
-
+    void updateLocalPlayerState(const ClientGameState& state);
     void sendStartAuctionAction();
     void sendAuctionBidAction(int amount);
 protected:
@@ -65,9 +65,10 @@ private:
     SettingsDialog* settingsDialog_;
 
     TcpClientController* clientController_;
-    TcpServerController* serverController_ = nullptr;
-    PurchaseOfferDialog* purchaseOfferDialog_ = nullptr;
-    AuctionDialog*       auctionDialog_ = nullptr;
+    TcpServerController* serverController_      = nullptr;
+    PurchaseOfferDialog* purchaseOfferDialog_   = nullptr;
+    AuctionDialog*       auctionDialog_         = nullptr;
+    int                  localPlayerBalance_    = 0;
 
 };
 

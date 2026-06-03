@@ -70,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(clientController_, &TcpClientController::chatMessageReceived,       this, &MainWindow::showChatMessage);
     connect(clientController_, &TcpClientController::gameEventReceived,         this, &MainWindow::showGameEvent);
     connect(clientController_, &TcpClientController::gameStateUpdated,          gameWidget_, &GameWidget::updateGameState);
+    connect(clientController_, &TcpClientController::gameStateUpdated,          this, &MainWindow::updateLocalPlayerState);
     connect(clientController_, &TcpClientController::errorOccurred,             this, &MainWindow::showNetworkError);
     connect(clientController_, &TcpClientController::disconnectedFromServer,    this, &MainWindow::handleServerDisconnected);
 }
@@ -289,7 +290,7 @@ void MainWindow::showPurchaseOffer(int cellId, const QString& cellName, int pric
                 audioService_, &AudioService::playAuctionStartSound);
     }
 
-    purchaseOfferDialog_->setOffer(cellId, cellName, price);
+    purchaseOfferDialog_->setOffer(cellId, cellName, price, localPlayerBalance_);
     purchaseOfferDialog_->show();
     purchaseOfferDialog_->raise();
     purchaseOfferDialog_->activateWindow();
@@ -333,6 +334,8 @@ void MainWindow::closeAuctionDialog()
 
     if (purchaseOfferDialog_)
         purchaseOfferDialog_->hide();
+
+    gameWidget_->setAuctionActive(false);
 }
 
 void MainWindow::sendBuyBusinessAction()
@@ -347,6 +350,22 @@ void MainWindow::sendBuyBusinessAction()
             payload
             )
         );
+}
+
+void MainWindow::updateLocalPlayerState(const ClientGameState& state)
+{
+    const quint16 localPlayerId = clientController_->playerId();
+
+    for (const ClientGamePlayer& player : state.players)
+    {
+        if (player.id == localPlayerId)
+        {
+            localPlayerBalance_ = player.balance;
+            return;
+        }
+    }
+
+    localPlayerBalance_ = 0;
 }
 
 void MainWindow::sendStartAuctionAction()

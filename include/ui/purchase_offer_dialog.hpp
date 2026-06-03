@@ -12,7 +12,7 @@ class PurchaseOfferDialog : public QDialog
 public:
     explicit PurchaseOfferDialog(QWidget* parent = nullptr);
 
-    void setOffer(int cellId, const QString& cellName, int price);
+    void setOffer(int cellId, const QString& cellName, int price, int playerBalance);
 
 signals:
     void buyRequested();

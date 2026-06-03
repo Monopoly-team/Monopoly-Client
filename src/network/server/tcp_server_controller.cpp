@@ -833,6 +833,7 @@ void TcpServerController::startAuction()
     auctionCurrentBid_ = 0;
     auctionHighestBidderId_ = 0;
     auctionHighestBidderName_.clear();
+    auctionOwnerTurnPlayerId_ = player->id;
 
     auctionTimer_->start(1000);
     broadcastAuctionUpdate();
@@ -905,13 +906,19 @@ void TcpServerController::finishAuction()
 {
     auctionTimer_->stop();
 
-    if (auctionHighestBidderId_ != 0 && auctionCurrentBid_ > 0)
+    const bool hasWinner = auctionHighestBidderId_ != 0 && auctionCurrentBid_ > 0;
+
+    if (hasWinner)
     {
         gameController_->buyAuctionBusiness(
             auctionHighestBidderId_,
             auctionCellId_,
             auctionCurrentBid_
             );
+    }
+    if (gameController_->gameState().currentPlayerId() == auctionOwnerTurnPlayerId_)
+    {
+        gameController_->finishCurrentTurn();
     }
 
     auctionActive_ = false;
@@ -920,11 +927,11 @@ void TcpServerController::finishAuction()
     auctionCurrentBid_ = 0;
     auctionHighestBidderId_ = 0;
     auctionHighestBidderName_.clear();
+    auctionOwnerTurnPlayerId_ = 0;
 
     broadcastToPlayers(
         NetworkMessage::create("auction_finished", SERVER_ID, QJsonObject{})
         );
 
-    gameController_->finishCurrentTurn();
     broadcastGameUpdate();
 }

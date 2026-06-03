@@ -73,6 +73,7 @@ private:
     void shutdownGame(const QString& reason);
 
     QJsonObject gameStartedMessage();
+
 private:
     QTcpServer*                         server_;
     QVector<QTcpSocket*>                clients_;
@@ -93,6 +94,7 @@ private:
     int                                 auctionCurrentBid_ = 0;
     quint16                             auctionHighestBidderId_ = 0;
     QString                             auctionHighestBidderName_;
+    quint16                             auctionOwnerTurnPlayerId_ = 0;
 
 
 };

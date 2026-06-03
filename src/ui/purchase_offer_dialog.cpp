@@ -51,10 +51,33 @@ PurchaseOfferDialog::PurchaseOfferDialog(QWidget* parent)
     });
 }
 
-void PurchaseOfferDialog::setOffer(int cellId, const QString& cellName, int price)
+void PurchaseOfferDialog::setOffer(int cellId, const QString& cellName, int price, int playerBalance)
 {
-    cellId_ = cellId;
+    Q_UNUSED(cellId);
 
     titleLabel_->setText(QString("Купить бизнес «%1»?").arg(cellName));
-    priceLabel_->setText(QString("Цена: %1 $").arg(price));
+
+    if (playerBalance >= price)
+    {
+        priceLabel_->setText(
+            QString("Цена покупки: %1 $ | Ваш баланс: %2 $")
+                .arg(price)
+                .arg(playerBalance)
+            );
+
+        buyButton_->setEnabled(true);
+        buyButton_->setToolTip({});
+    }
+    else
+    {
+        priceLabel_->setText(
+            QString("Цена покупки: %1 $ | Ваш баланс: %2 $ | Не хватает: %3 $")
+                .arg(price)
+                .arg(playerBalance)
+                .arg(price - playerBalance)
+            );
+
+        buyButton_->setEnabled(false);
+        buyButton_->setToolTip("Недостаточно денег для покупки");
+    }
 }
