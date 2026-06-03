@@ -8,6 +8,8 @@
 #include <QHash>
 #include <QTimer>
 
+#include "game/game_controller.hpp"
+
 struct ServerPlayer
 {
     QString     nickname;
@@ -50,6 +52,10 @@ private:
     void broadcastLobbyUpdate();
     void sendLobbyPlayersToAdmin();
 
+    void broadcastGameState();
+    void broadcastGameEvents();
+    void broadcastGameUpdate();
+
     void checkGameStart();
     void startGame();
     void startCountdown();
@@ -68,7 +74,8 @@ private:
     QTimer*                             startCountdownTimer_;
     int                                 countdownSecondsLeft_   = 5;
     bool                                countdownActive_        = false;
-    bool                                gameStarted_ = false;
+    bool                                gameStarted_            = false;
+    GameController*                     gameController_;
 
 
 

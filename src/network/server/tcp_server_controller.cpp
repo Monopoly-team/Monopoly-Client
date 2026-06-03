@@ -11,8 +11,9 @@
 TcpServerController::TcpServerController(QObject *parent)
     : QObject(parent)
 {
-    server_ = new QTcpServer(this);
-    startCountdownTimer_ = new QTimer(this);
+    server_                 = new QTcpServer(this);
+    startCountdownTimer_    = new QTimer(this);
+    gameController_         = new GameController(this);
 
     connect(startCountdownTimer_, &QTimer::timeout, this, &TcpServerController::onCountdownTick);
     connect(server_, &QTcpServer::newConnection, this, &TcpServerController::onNewConnection);
@@ -71,7 +72,10 @@ void TcpServerController::onDisconnect()
     }
     else if (players_.contains(clientSocket))
     {
+        const quint16 playerId = players_[clientSocket].id;
+
         players_.remove(clientSocket);
+        gameController_->removePlayer(playerId);
 
         if (players_.isEmpty())
         {
@@ -93,6 +97,8 @@ void TcpServerController::onDisconnect()
         else
         {
             broadcastLobbyUpdate();
+            if (gameStarted_)
+                broadcastGameUpdate();
         }
     }
 
@@ -265,6 +271,7 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
     player.ready    = false;
 
     players_.insert(senderSocket,player);
+    gameController_->addPlayer(player.id, player.nickname);
 
     QJsonObject acceptedPayload;
 
@@ -279,6 +286,9 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
         );
 
     sendToClient(senderSocket, acceptedMessage);
+
+    gameController_->takeEvents();
+
     broadcastLobbyUpdate();
     sendLobbyPlayersToAdmin();
 
@@ -388,65 +398,54 @@ void TcpServerController::startGame()
     if (gameStarted_)
         return;
 
+    if (!gameController_->startGame())
+    {
+        broadcastGameEvents();
+        return;
+    }
+
     gameStarted_ = true;
+
     qDebug() << "[Server] Starting game";
 
     broadcastMessage(gameStartedMessage());
+    broadcastGameUpdate();
+}
 
-    QJsonArray playersArray;
-
-    const QStringList colors =
-        {
-            "#6C7BFF",
-            "#FF6B6B",
-            "#6EE7A8",
-            "#FFD166",
-            "#B56CFF",
-            "#4DDBFF"
-        };
-
-    int index = 0;
-
-    for (const ServerPlayer& player : players_)
-    {
-        QJsonObject playerObject;
-
-        playerObject["id"] = player.id;
-        playerObject["nickname"] = player.nickname;
-        playerObject["balance"] = 1500;
-        playerObject["position"] = 0;
-        playerObject["color"] = colors[index % colors.size()];
-
-        playersArray.append(playerObject);
-
-        ++index;
-    }
-
-    QJsonObject payload;
-
-    payload["status"] = "playing";
-    payload["currentPlayerId"] = 1;
-    payload["players"] = playersArray;
-    payload["cells"] = QJsonArray{};
-
-    broadcastToPlayers(
+void TcpServerController::broadcastGameState()
+{
+    broadcastMessage(
         NetworkMessage::create(
             "game_state",
             SERVER_ID,
-            payload
+            gameController_->gameStateToJson()
             )
         );
+}
 
-    QJsonObject eventPayload;
-    eventPayload["text"] = "Игра началась";
+void TcpServerController::broadcastGameEvents()
+{
+    const QStringList events = gameController_->takeEvents();
 
-    broadcastToPlayers(
-        NetworkMessage::create(
-            "game_event",
-            SERVER_ID,
-            eventPayload
-            )
-    );
+    for (const QString& eventText : events)
+    {
+        QJsonObject payload;
+        payload["text"] = eventText;
+
+        broadcastMessage(
+            NetworkMessage::create(
+                "game_event",
+                SERVER_ID,
+                payload
+                )
+            );
+    }
+}
+
+void TcpServerController::broadcastGameUpdate()
+{
+    broadcastGameState();
+    broadcastGameEvents();
 }
 
 void TcpServerController::startCountdown()
