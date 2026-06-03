@@ -252,6 +252,7 @@ void TcpClientController::handleGameEvent(const QJsonObject& message)
 
 void TcpClientController::handleGameState(const QJsonObject& message)
 {
+
     ClientGameState state;
 
     const QJsonObject payload = message["payload"].toObject();
@@ -282,7 +283,7 @@ void TcpClientController::handleGameState(const QJsonObject& message)
         player.active = object["active"].toBool(true);
         player.isInJail = object["isInJail"].toBool();
         player.isCurrentTurn = player.id == state.currentPlayerId;
-        player.ownedPropertiesCount = object["ownedProperties"].toArray().size();
+        player.ownedPropertiesCount = object["ownedPrope    rties"].toArray().size();
 
         state.players.push_back(player);
     }

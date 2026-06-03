@@ -275,7 +275,6 @@ bool GameController::handleRollDiceAction(Player& player, const QJsonObject& pay
             appendEvent(QStringLiteral("%1 пропускает ход в тюрьме.").arg(playerName(player)));
         }
 
-        hasRolledThisTurn_ = true;
         finishTurn();
         return true;
     }
@@ -639,6 +638,12 @@ void GameController::handleBusinessCell(Player& player, Cell& cell)
         cell.buildingLevel = 0;
 
         appendEvent(QStringLiteral("Бизнес \"%1\" снова свободен.").arg(cell.name));
+
+        appendEvent(
+            QStringLiteral("%1 может купить \"%2\" за %3.")
+                .arg(playerName(player))
+                .arg(cell.name)
+                .arg(cell.price));
 
         return;
     }

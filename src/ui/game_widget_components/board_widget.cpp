@@ -79,9 +79,9 @@ QString imagePathForCell(quint8 id)
     case 8:  return ":/resources/img/lamoda.svg";
     case 9:  return ":/resources/img/hm.png";
 
-    case 11: return ":/resources/img/diksi.svg";
+    case 11: return ":/resources/img/5erochka.svg";
     case 12: return ":/resources/img/magnit.svg";
-    case 13: return ":/resources/img/5erochka.svg";
+    case 13: return ":/resources/img/diksi.svg";
 
     case 15: return ":/resources/img/it_top_sch.svg";
 
