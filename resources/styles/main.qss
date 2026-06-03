@@ -245,62 +245,55 @@ QLabel[ready="false"]
 QMessageBox
 {
     background-color: #1B1F36;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
 }
 
 QMessageBox QLabel
 {
-    color: #FFFFFF;
+    color: white;
     background: transparent;
 
     font-family: "Segoe UI";
-    font-size: 15pt;
+    font-size: 16px;
     font-weight: 600;
 }
 
 QMessageBox QLabel#qt_msgbox_label
 {
-    min-width: 350px;
-    padding: 15px;
+    min-width: 440px;
+    max-width: 440px;
+
+    padding: 16px;
+
+    color: white;
+
+    font-size: 16px;
+    font-weight: 500;
 }
 
 QMessageBox QPushButton
 {
     background-color: rgba(255,255,255,0.08);
-
     color: white;
 
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.14);
     border-radius: 12px;
 
-    min-width: 140px;
-    min-height: 42px;
+    min-width: 120px;
+    min-height: 38px;
 
-    font-size: 12pt;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
 }
 
 QMessageBox QPushButton:hover
 {
-    background-color: rgba(255,255,255,0.12);
+    background-color: rgba(255,255,255,0.15);
 }
 
 QMessageBox QPushButton:pressed
 {
-    background-color: rgba(255,255,255,0.18);
-}
-
-QMessageBox QLabel#qt_msgbox_label
-{
-    min-width: 450px;
-    max-width: 450px;
-
-    padding: 15px;
-
-    color: white;
-
-    font-size: 14pt;
-    font-weight: 500;
+    background-color: rgba(255,255,255,0.22);
 }
 
 #settingsButton
@@ -402,33 +395,54 @@ QMessageBox QLabel#qt_msgbox_label
 #auctionDialog
 {
     background-color: #1B1F36;
-    border: 1px solid rgba(255,255,255,0.10);
-}
 
-#purchaseTitle,
-#auctionTitle
-{
-    color: white;
-    background: transparent;
-    font-size: 24px;
-    font-weight: 800;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 18px;
 }
 
 #purchasePrice,
-#auctionTimer,
 #auctionBidLabel
 {
     color: rgba(255,255,255,0.88);
     background: transparent;
+
+    font-family: "Segoe UI";
     font-size: 17px;
     font-weight: 600;
+
+    min-height: 30px;
+    max-height: 30px;
+}
+
+#purchasePrice,
+#auctionBidLabel
+{
+    color: rgba(255,255,255,0.88);
+    background: transparent;
+
+    font-family: "Segoe UI";
+    font-size: 17px;
+    font-weight: 600;
+
+    min-height: 30px;
 }
 
 #auctionTimer
 {
     color: #FFD166;
-    font-size: 20px;
-    font-weight: 800;
+    background-color: rgba(255,209,102,0.10);
+
+    border: 1px solid rgba(255,209,102,0.20);
+    border-radius: 14px;
+
+    font-family: "Segoe UI";
+    font-size: 22px;
+    font-weight: 900;
+
+    min-height: 44px;
+    max-height: 44px;
+
+    padding: 4px 14px;
 }
 
 #auctionBidInput
@@ -439,12 +453,14 @@ QMessageBox QLabel#qt_msgbox_label
     border: 1px solid rgba(255,255,255,0.14);
     border-radius: 12px;
 
-    padding: 10px 14px;
+    padding: 0 14px;
 
+    min-height: 46px;
+    max-height: 46px;
+
+    font-family: "Segoe UI";
     font-size: 18px;
     font-weight: 700;
-
-    min-height: 42px;
 }
 
 #auctionBidInput:focus
@@ -462,7 +478,9 @@ QMessageBox QLabel#qt_msgbox_label
     border-radius: 14px;
 
     min-height: 46px;
+    max-height: 46px;
 
+    font-family: "Segoe UI";
     font-size: 16px;
     font-weight: 800;
 }
@@ -548,41 +566,3 @@ QMenu::separator
     margin: 6px 4px;
 }
 
-QMessageBox
-{
-    background-color: #1B1F36;
-}
-
-QMessageBox QLabel
-{
-    color: white;
-    background: transparent;
-
-    font-size: 17px;
-    font-weight: 500;
-}
-
-QMessageBox QPushButton
-{
-    background-color: rgba(255,255,255,0.08);
-    color: white;
-
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 10px;
-
-    min-width: 110px;
-    min-height: 34px;
-
-    font-size: 14px;
-    font-weight: 700;
-}
-
-QMessageBox QPushButton:hover
-{
-    background-color: rgba(255,255,255,0.15);
-}
-
-QMessageBox QPushButton:pressed
-{
-    background-color: rgba(255,255,255,0.22);
-}

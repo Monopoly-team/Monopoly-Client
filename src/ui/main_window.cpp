@@ -311,6 +311,8 @@ void MainWindow::showAuctionUpdate(
                 this, &MainWindow::sendAuctionBidAction);
     }
 
+    const bool shouldShowDialog = !auctionDialog_->isVisible();
+
     auctionDialog_->updateAuction(
         cellId,
         cellName,
@@ -319,9 +321,12 @@ void MainWindow::showAuctionUpdate(
         highestBidderName
         );
 
-    auctionDialog_->show();
-    auctionDialog_->raise();
-    auctionDialog_->activateWindow();
+    if (shouldShowDialog)
+    {
+        auctionDialog_->show();
+        auctionDialog_->raise();
+        auctionDialog_->activateWindow();
+    }
 
     gameWidget_->setAuctionActive(true);
 }
