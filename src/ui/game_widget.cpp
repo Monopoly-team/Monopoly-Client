@@ -31,9 +31,10 @@ void GameWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
 
 void GameWidget::updateGameState(const ClientGameState& state)
 {
-    leftPanelWidget_->updatePlayers(state.players);
+    leftPanelWidget_->updatePlayers(state.players, state.winnerId);
     leftPanelWidget_->setDiceValues(state.lastDiceFirst, state.lastDiceSecond);
 
+    centerGameWidget_->setWinnerId(state.winnerId);
     centerGameWidget_->setPlayers(state.players);
     centerGameWidget_->setCells(state.cells);
 
@@ -52,4 +53,8 @@ void GameWidget::setAuctionActive(bool active)
     auctionActive_ = active;
 
     leftPanelWidget_->setRollEnabled(!auctionActive_);
+}
+void GameWidget::addChatMessage(quint16 playerId, const QString& nickname, const QString& text)
+{
+    centerGameWidget_->addChatMessage(playerId, nickname, text);
 }

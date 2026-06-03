@@ -35,6 +35,8 @@ public:
     void setCells(const QVector<ClientBoardCell>& cells);
     void setPlayers(const QVector<ClientGamePlayer>& players);
     void setLocalPlayerId(quint16 playerId);
+    void addChatMessage(quint16 playerId, const QString& nickname, const QString& text);
+    void setWinnerId(quint16 winnerId);
 signals:
     void messageSent(const QString& message);
     void buildBusinessRequested(int cellId);
@@ -68,6 +70,13 @@ private:
     bool canBuildOnCellEvenly(const ClientBoardCell& cell) const;
 
     QString ownerNameById(quint16 playerId) const;
+    const ClientGamePlayer* playerById(quint16 playerId) const;
+    const ClientGamePlayer* playerAtEventStart(const QString& eventText, QString* matchedNickname = nullptr) const;
+
+    QColor displayColorForPlayer(const ClientGamePlayer& player) const;
+
+    void appendPlayerLine(const ClientGamePlayer& player, const QString& text);
+    void appendSystemLine(const QString& text);
 
 
 private:
@@ -95,6 +104,7 @@ private:
     QHash<quint16, TokenAnimation> tokenAnimations_;
     QHash<quint16, int> playerPositions_;
     quint16 localPlayerId_ = 0;
+    quint16 winnerId_ = 0;
 
 };
 

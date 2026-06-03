@@ -1,6 +1,7 @@
 #include "game_widget_components/board_widget.hpp"
 #include "game/models/business_group_utils.hpp"
 #include "game/models/cell_type.hpp"
+#include "ui/player_visuals.hpp"
 
 #include <QAction>
 #include <QMessageBox>
@@ -57,9 +58,44 @@ BoardWidget::~BoardWidget() = default;
 
 void BoardWidget::addEvent(const QString& event)
 {
-    eventsView_->append(event);
-}
+    QString matchedNickname;
+    const ClientGamePlayer* player = playerAtEventStart(event, &matchedNickname);
 
+    if (!player)
+    {
+        appendSystemLine(event);
+        return;
+    }
+
+    QString actionText = event.mid(matchedNickname.length()).trimmed();
+
+    if (actionText.startsWith(':') || actionText.startsWith('-') || actionText.startsWith(QChar(0x2014)))
+        actionText = actionText.mid(1).trimmed();
+
+    appendPlayerLine(*player, actionText);
+}
+void BoardWidget::addChatMessage(quint16 playerId, const QString& nickname, const QString& text)
+{
+    const ClientGamePlayer* player = playerById(playerId);
+
+    if (player)
+    {
+        appendPlayerLine(*player, text);
+        return;
+    }
+
+    const QString safeNickname = nickname.toHtmlEscaped();
+    const QString safeText = text.toHtmlEscaped();
+
+    eventsView_->append(
+        QStringLiteral(
+            "<span style=\"color:#FFFFFF; font-weight:800;\">%1:</span> "
+            "<span style=\"color:#EDEDED;\">%2</span>"
+            )
+            .arg(safeNickname)
+            .arg(safeText)
+        );
+}
 void BoardWidget::clearEvents()
 {
     eventsView_->clear();
@@ -343,6 +379,85 @@ QString BoardWidget::ownerNameById(quint16 playerId) const
 
     return QStringLiteral("Игрок %1").arg(playerId);
 }
+
+const ClientGamePlayer* BoardWidget::playerById(quint16 playerId) const
+{
+    for (const ClientGamePlayer& player : players_)
+    {
+        if (player.id == playerId)
+            return &player;
+    }
+
+    return nullptr;
+}
+
+const ClientGamePlayer* BoardWidget::playerAtEventStart(const QString& eventText, QString* matchedNickname) const
+{
+    const ClientGamePlayer* matchedPlayer = nullptr;
+    QString matchedName;
+
+    for (const ClientGamePlayer& player : players_)
+    {
+        const QString nickname = player.nickname.trimmed();
+
+        if (nickname.isEmpty())
+            continue;
+
+        const bool startsWithName =
+            eventText == nickname ||
+            eventText.startsWith(nickname + " ") ||
+            eventText.startsWith(nickname + ":") ||
+            eventText.startsWith(nickname + "-") ||
+            eventText.startsWith(nickname + QChar(0x2014));
+
+        if (!startsWithName)
+            continue;
+
+        if (!matchedPlayer || nickname.length() > matchedName.length())
+        {
+            matchedPlayer = &player;
+            matchedName = nickname;
+        }
+    }
+
+    if (matchedNickname)
+        *matchedNickname = matchedName;
+
+    return matchedPlayer;
+}
+
+QColor BoardWidget::displayColorForPlayer(const ClientGamePlayer& player) const
+{
+    return PlayerVisuals::displayColor(player, winnerId_);
+}
+
+void BoardWidget::appendPlayerLine(const ClientGamePlayer& player, const QString& text)
+{
+    const QString safeNickname = player.nickname.toHtmlEscaped();
+    const QString safeText = text.toHtmlEscaped();
+    const QString colorName = displayColorForPlayer(player).name();
+
+    eventsView_->append(
+        QStringLiteral(
+            "<span style=\"color:%1; font-weight:800;\">%2:</span> "
+            "<span style=\"color:#EDEDED;\">%3</span>"
+            )
+            .arg(colorName)
+            .arg(safeNickname)
+            .arg(safeText)
+        );
+}
+
+void BoardWidget::appendSystemLine(const QString& text)
+{
+    eventsView_->append(
+        QStringLiteral(
+            "<span style=\"color:rgba(255,255,255,0.74); font-weight:600;\">%1</span>"
+            )
+            .arg(text.toHtmlEscaped())
+        );
+}
+
 bool BoardWidget::canBuildOnCellEvenly(const ClientBoardCell& targetCell) const
 {
     if (targetCell.type != CellType::Business)
@@ -1182,7 +1297,7 @@ void BoardWidget::drawPlayerTokens(QPainter& painter)
                 tokenSize
                 );
 
-            painter.setBrush(QColor(player.color));
+            painter.setBrush(displayColorForPlayer(player));
             painter.setPen(QPen(QColor("#202020"), 2));
             painter.drawEllipse(tokenRect);
         }
@@ -1192,4 +1307,10 @@ void BoardWidget::drawPlayerTokens(QPainter& painter)
 void BoardWidget::setLocalPlayerId(quint16 playerId)
 {
     localPlayerId_ = playerId;
+}
+
+void BoardWidget::setWinnerId(quint16 winnerId)
+{
+    winnerId_ = winnerId;
+    update();
 }

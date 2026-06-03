@@ -18,6 +18,8 @@ public:
     void setPlayers(const QVector<ClientGamePlayer>& players);
     void setCells(const QVector<ClientBoardCell>& cells);
     void setLocalPlayerId(quint16 playerId);
+    void addChatMessage(quint16 playerId, const QString& nickname, const QString& text);
+    void setWinnerId(quint16 winnerId);
 private:
     BoardWidget* boardWidget_;
 

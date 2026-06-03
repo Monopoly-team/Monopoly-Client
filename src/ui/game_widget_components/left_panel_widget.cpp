@@ -17,9 +17,9 @@ LeftPanelWidget::LeftPanelWidget(QWidget *parent)
 
 LeftPanelWidget::~LeftPanelWidget()= default;
 
-void LeftPanelWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
+void LeftPanelWidget::updatePlayers(const QVector<ClientGamePlayer>& players, quint16 winnerId)
 {
-    playersList_->updatePlayers(players);
+    playersList_->updatePlayers(players, winnerId);
 }
 
 void LeftPanelWidget::setDiceValues(int first, int second)

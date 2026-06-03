@@ -236,10 +236,11 @@ void TcpClientController::handleChatMessage(const QJsonObject& message)
 {
     const QJsonObject payload = message["payload"].toObject();
 
+    const quint16 playerId = static_cast<quint16>(payload["playerId"].toInt());
     const QString nickname = payload["nickname"].toString();
     const QString text = payload["text"].toString();
 
-    emit chatMessageReceived(nickname, text);
+    emit chatMessageReceived(playerId, nickname, text);
 }
 
 void TcpClientController::handleGameEvent(const QJsonObject& message)

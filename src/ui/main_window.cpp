@@ -134,11 +134,9 @@ void MainWindow::sendChatMessage(const QString& text)
         );
 }
 
-void MainWindow::showChatMessage(const QString& nickname, const QString& text)
+void MainWindow::showChatMessage(quint16 playerId, const QString& nickname, const QString& text)
 {
-    gameWidget_->addEvent(
-        QString("[%1] %2").arg(nickname, text)
-        );
+    gameWidget_->addChatMessage(playerId, nickname, text);
 }
 
 void MainWindow::showNetworkError(const QString& message)
@@ -166,7 +164,7 @@ void MainWindow::handleServerDisconnected()
 
 void MainWindow::showGameEvent(const QString& text)
 {
-    gameWidget_->addEvent("[Событие] " + text);
+    gameWidget_->addEvent(text);
 }
 
 void MainWindow::sendConnectRequest()

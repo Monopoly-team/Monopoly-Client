@@ -26,7 +26,7 @@ public:
     void updateGameState(const ClientGameState& state);
     void setLocalPlayerId(quint16 playerId);
     void setAuctionActive(bool active);
-
+    void addChatMessage(quint16 playerId, const QString& nickname, const QString& text);
 private:
     LeftPanelWidget* leftPanelWidget_;
     CenterGameWidget* centerGameWidget_;

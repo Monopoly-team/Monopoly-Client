@@ -59,22 +59,31 @@ bool GameSession::removePlayer(int playerId)
     QVector<Player>& players = state_.players();
     const bool wasCurrentPlayer = state_.currentPlayerId() == playerId;
 
-    releasePlayerProperties(players[playerIndex]);
-    players.removeAt(playerIndex);
+    if (isPlaying()) {
+        releasePlayerProperties(players[playerIndex]);
 
-    if (players.isEmpty()) {
-        state_.setCurrentPlayerId(NO_OWNER_ID);
+        players[playerIndex].active = false;
+        players[playerIndex].isInJail = false;
 
-        if (isPlaying()) {
-            finish(NO_WINNER_ID);
+        if (activePlayersCount() <= 1) {
+            const Player* winner = firstActivePlayer();
+            finish(winner != nullptr ? winner->id : NO_WINNER_ID);
+            return true;
+        }
+
+        if (wasCurrentPlayer) {
+            Player* nextPlayer = firstActivePlayer();
+            state_.setCurrentPlayerId(nextPlayer != nullptr ? nextPlayer->id : NO_OWNER_ID);
         }
 
         return true;
     }
 
-    if (isPlaying() && activePlayersCount() <= 1) {
-        const Player* winner = firstActivePlayer();
-        finish(winner != nullptr ? winner->id : NO_WINNER_ID);
+    releasePlayerProperties(players[playerIndex]);
+    players.removeAt(playerIndex);
+
+    if (players.isEmpty()) {
+        state_.setCurrentPlayerId(NO_OWNER_ID);
         return true;
     }
 

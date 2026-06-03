@@ -33,3 +33,12 @@ void CenterGameWidget::setLocalPlayerId(quint16 playerId)
 {
     boardWidget_->setLocalPlayerId(playerId);
 }
+
+void CenterGameWidget::addChatMessage(quint16 playerId, const QString& nickname, const QString& text)
+{
+    boardWidget_->addChatMessage(playerId, nickname, text);
+}
+void CenterGameWidget::setWinnerId(quint16 winnerId)
+{
+    boardWidget_->setWinnerId(winnerId);
+}

@@ -17,7 +17,7 @@ public:
     explicit LeftPanelWidget(QWidget* parent = nullptr);
     ~LeftPanelWidget() override;
 
-    void updatePlayers(const QVector<ClientGamePlayer>& players);
+    void updatePlayers(const QVector<ClientGamePlayer>& players, quint16 winnerId = 0);
     void setDiceValues(int first, int second);
     void setRollEnabled(bool enabled);
 

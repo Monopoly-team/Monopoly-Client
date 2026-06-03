@@ -22,7 +22,7 @@ public:
         );
 
     void clearPlayer(int index);
-    void updatePlayers(const QVector<ClientGamePlayer>& players);
+    void updatePlayers(const QVector<ClientGamePlayer>& players, quint16 winnerId = 0);
 
 private:
     QVBoxLayout* rootLayout_;

@@ -54,7 +54,7 @@ signals:
     void gameStarted();
     void countdownUpdated(int secondsLeft);
     void countdownCancelled();
-    void chatMessageReceived(const QString& nickname, const QString& text);
+    void chatMessageReceived(quint16 playerId, const QString& nickname, const QString& text);
     void gameEventReceived(const QString& text);
     void gamePlayersUpdated(const QVector<ClientGamePlayer>& players);
     void serverDisconnectRequested(const QString& reason);

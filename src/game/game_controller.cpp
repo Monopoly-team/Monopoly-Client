@@ -79,7 +79,7 @@ bool GameController::removePlayer(int playerId)
     }
 
     hasRolledThisTurn_ = false;
-    appendEvent(QStringLiteral("%1 удалён из игры.").arg(name));
+    appendEvent(QStringLiteral("%1 отключился от игры.").arg(name));
     updateGameOver();
     emit stateChanged();
 

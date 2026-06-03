@@ -30,7 +30,7 @@ AuctionDialog::AuctionDialog(QWidget* parent)
     titleLabel_ = new QLabel(this);
     titleLabel_->setObjectName("auctionTitle");
     titleLabel_->setAlignment(Qt::AlignCenter);
-    titleLabel_->setWordWrap(true);
+    titleLabel_->setWordWrap(false);
     titleLabel_->setMinimumHeight(62);
 
     timerLabel_ = new QLabel(this);

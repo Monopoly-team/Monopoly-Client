@@ -51,7 +51,7 @@ void PlayersListWidget::clearPlayer(int index)
     playerCards_[index]->hide();
 }
 
-void PlayersListWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
+void PlayersListWidget::updatePlayers(const QVector<ClientGamePlayer>& players, quint16 winnerId)
 {
     for (auto* card : playerCards_)
         card->hide();
@@ -60,8 +60,7 @@ void PlayersListWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
 
     for (int i = 0; i < count; ++i)
     {
-        playerCards_[i]->setNickname(players[i].nickname);
-        playerCards_[i]->setBalance(players[i].balance);
+        playerCards_[i]->setPlayer(players[i], winnerId);
         playerCards_[i]->show();
     }
 }

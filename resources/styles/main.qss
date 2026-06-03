@@ -77,6 +77,7 @@ QMainWindow {
 
 #playerCard {
     background-color: rgba(0,0,0,0.2);
+    border-left: 8px solid transparent;
     border-radius: 18px;
 }
 
@@ -566,3 +567,33 @@ QMenu::separator
     margin: 6px 4px;
 }
 
+#purchaseTitle
+{
+    color: white;
+    background: transparent;
+
+    font-family: "Segoe UI";
+    font-size: 24px;
+    font-weight: 800;
+
+    min-height: 56px;
+    max-height: 56px;
+}
+
+#auctionTitle
+{
+    color: white;
+    background: transparent;
+
+    font-family: "Segoe UI";
+    font-size: 24px;
+    font-weight: 800;
+
+    qproperty-alignment: AlignCenter;
+
+    min-height: 54px;
+    max-height: 54px;
+
+    padding: 0;
+    margin: 0;
+}
