@@ -37,6 +37,7 @@ private slots:
     void onServerDisconnectRequested(const QString &reason);
     void openSettings();
     void updateSettingsButtonGeometry();
+    void sendRollDiceAction();
 protected:
     void resizeEvent(QResizeEvent* event) override;
 public:

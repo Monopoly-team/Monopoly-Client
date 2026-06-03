@@ -13,6 +13,7 @@ class GameWidget : public QWidget
     Q_OBJECT
 signals:
     void messageSent(const QString& message);
+    void rollDiceRequested();
 private slots:
 
 public:

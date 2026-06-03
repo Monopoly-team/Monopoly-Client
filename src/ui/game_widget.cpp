@@ -12,7 +12,8 @@ GameWidget::GameWidget(QWidget *parent)
     rootLayout_->addWidget(leftPanelWidget_,1);
     rootLayout_->addWidget(centerGameWidget_,6);
 
-    connect(centerGameWidget_, &CenterGameWidget::messageSent, this, &GameWidget::messageSent);
+    connect(centerGameWidget_, &CenterGameWidget::messageSent,      this, &GameWidget::messageSent);
+    connect(leftPanelWidget_,  &LeftPanelWidget::rollDiceRequested, this, &GameWidget::rollDiceRequested);
 
 }
 

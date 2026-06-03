@@ -9,6 +9,10 @@
 
 class LeftPanelWidget : public QWidget
 {
+    Q_OBJECT
+
+signals:
+    void rollDiceRequested();
 public:
     explicit LeftPanelWidget(QWidget* parent = nullptr);
     ~LeftPanelWidget() override;

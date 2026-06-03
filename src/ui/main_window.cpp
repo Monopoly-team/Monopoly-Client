@@ -37,11 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
     settingsDialog_ = new SettingsDialog(this);
     settingsDialog_->setMusicVolume(audioService_->musicVolume());
 
-    connect(settingsButton_, &QPushButton::clicked,
-            this, &MainWindow::openSettings);
-
-    connect(settingsDialog_, &SettingsDialog::musicVolumeChanged,
-            audioService_, &AudioService::setMusicVolume);
+    connect(settingsButton_, &QPushButton::clicked, this, &MainWindow::openSettings);
+    connect(settingsDialog_, &SettingsDialog::musicVolumeChanged, audioService_, &AudioService::setMusicVolume);
 
     updateSettingsButtonGeometry();
 
@@ -65,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(clientController_, &TcpClientController::countdownUpdated,          lobbyWidget_, &LobbyWidget::updateCountdown);
     connect(clientController_, &TcpClientController::countdownCancelled,        lobbyWidget_, &LobbyWidget::cancelCountdown);
     connect(gameWidget_,       &GameWidget::messageSent,                        this, &MainWindow::sendChatMessage);
+    connect(gameWidget_,       &GameWidget::rollDiceRequested,                  this, &MainWindow::sendRollDiceAction);
     connect(clientController_, &TcpClientController::chatMessageReceived,       this, &MainWindow::showChatMessage);
     connect(clientController_, &TcpClientController::gameEventReceived,         this, &MainWindow::showGameEvent);
     connect(clientController_, &TcpClientController::gamePlayersUpdated,        gameWidget_, &GameWidget::updatePlayers);
@@ -252,4 +250,18 @@ void MainWindow::updateSettingsButtonGeometry()
         );
 
     settingsButton_->raise();
+}
+
+void MainWindow::sendRollDiceAction()
+{
+    QJsonObject payload;
+    payload["action"] = "roll_dice";
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "player_action",
+            clientController_->playerId(),
+            payload
+            )
+        );
 }
