@@ -21,9 +21,6 @@ public:
     QString serverIp() const;
     QString nickname() const;
 
-    QPushButton *createButton() const;
-    QPushButton *joinButton() const;
-
 private:
     QLabel*         menuLabel_;
 

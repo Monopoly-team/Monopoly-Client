@@ -1,4 +1,5 @@
 #include "game_widget_components/dice_widget.hpp"
+
 #include <QMouseEvent>
 #include <QPixmap>
 
@@ -84,6 +85,4 @@ void DiceWidget::setDiceValues(int first, int second)
             Qt::SmoothTransformation
             )
         );
-
-
 }

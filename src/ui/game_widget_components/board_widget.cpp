@@ -10,7 +10,6 @@
 #include <QPen>
 #include <QColor>
 #include <QPainterPath>
-#include <QSvgRenderer>
 
 #include <algorithm>
 
@@ -41,10 +40,6 @@ BoardWidget::BoardWidget(QWidget* parent)
     connect(chatInput_, &QLineEdit::returnPressed, this, &BoardWidget::sendMessage);
     setCells(createDefaultCells());
 
-    animationTimer_ = new QTimer(this);
-    animationTimer_->setInterval(16);
-
-    connect(animationTimer_, &QTimer::timeout,this, &BoardWidget::updateTokenAnimations);
 }
 
 BoardWidget::~BoardWidget() = default;
@@ -63,189 +58,6 @@ void BoardWidget::setCells(const QVector<ClientBoardCell>& cells)
 {
     cells_ = cells;
     update();
-}
-
-void BoardWidget::setPlayers(const QVector<ClientGamePlayer>& players)
-{
-    for (const ClientGamePlayer& player : players)
-    {
-        const int newPosition = player.position;
-
-        if (newPosition < 0 || newPosition >= 40)
-            continue;
-
-        if (playerPositions_.contains(player.id))
-        {
-            const int oldPosition = playerPositions_[player.id];
-
-            if (oldPosition != newPosition)
-            {
-                startTokenAnimation(
-                    player.id,
-                    oldPosition,
-                    newPosition
-                    );
-            }
-        }
-
-        playerPositions_[player.id] = newPosition;
-    }
-
-    players_ = players;
-
-    QTimer::singleShot(
-        3000,
-        this,
-        [this]()
-        {
-            QVector<ClientGamePlayer> players = players_;
-            players[1].position = 15;
-            setPlayers(players);
-        }
-        );
-    QTimer::singleShot(
-        4000,
-        this,
-        [this]()
-        {
-            QVector<ClientGamePlayer> players = players_;
-            players[0].position = 15;
-            setPlayers(players);
-        }
-        );
-    update();
-}
-
-void BoardWidget::updateTokenAnimations()
-{
-    constexpr float durationMs = 180.0f;
-
-    const float progress =
-        std::min(
-            1.0f,
-            static_cast<float>(animationClock_.elapsed()) / durationMs
-            );
-
-    for (auto it = tokenAnimations_.begin(); it != tokenAnimations_.end(); )
-    {
-        TokenAnimation& animation = it.value();
-        animation.progress = progress;
-
-        if (progress >= 1.0f)
-        {
-            animation.currentStep++;
-
-            if (animation.currentStep >= animation.path.size())
-            {
-                it = tokenAnimations_.erase(it);
-                continue;
-            }
-
-            const int fromCell = animation.path[animation.currentStep - 1];
-            const int toCell = animation.path[animation.currentStep];
-
-            animation.from = tokenPositionForCell(
-                fromCell,
-                0,
-                1
-                );
-
-            animation.to = tokenPositionForCell(
-                toCell,
-                0,
-                1
-                );
-
-            animation.progress = 0.0f;
-            animationClock_.restart();
-        }
-
-        ++it;
-    }
-
-    if (tokenAnimations_.isEmpty())
-        animationTimer_->stop();
-
-    update();
-}
-
-QPointF BoardWidget::currentTokenPosition(
-    const ClientGamePlayer& player,
-    int tokenIndex,
-    int tokenCount
-    ) const
-{
-    if (tokenAnimations_.contains(player.id))
-    {
-        const TokenAnimation& animation =
-            tokenAnimations_[player.id];
-
-        const float t = animation.progress;
-        const float eased = 1.0f - (1.0f - t) * (1.0f - t);
-
-        return animation.from + (animation.to - animation.from) * eased;
-    }
-
-    return tokenPositionForCell(
-        player.position,
-        tokenIndex,
-        tokenCount
-        );
-}
-
-QVector<int> BoardWidget::buildMovePath(int from, int to) const
-{
-    QVector<int> path;
-
-    if (from == to)
-        return path;
-
-    int current = from;
-
-    while (current != to)
-    {
-        current = (current + 1) % 40;
-        path.push_back(current);
-    }
-
-    return path;
-}
-void BoardWidget::startTokenAnimation(
-    quint16 playerId,
-    int fromPosition,
-    int toPosition
-    )
-{
-    QVector<int> path = buildMovePath(fromPosition, toPosition);
-
-    if (path.isEmpty())
-        return;
-
-    TokenAnimation animation;
-
-    animation.path = path;
-    animation.currentStep = 0;
-    animation.progress = 0.0f;
-
-    animation.from = tokenPositionForCell(
-        fromPosition,
-        0,
-        1
-        );
-
-    animation.to = tokenPositionForCell(
-        path[0],
-        0,
-        1
-        );
-
-    tokenAnimations_[playerId] = animation;
-
-    if (!animationTimer_->isActive())
-    {
-        animationClock_.restart();
-        animationTimer_->start();
-    }
 }
 
 void BoardWidget::sendMessage()
@@ -270,7 +82,7 @@ void BoardWidget::updateChatGeometry()
     const int padding = 24;
     const int boardSize = std::min(width(), height()) - padding * 2;
 
-    const int cornerSize = boardSize / 6;
+    const int cornerSize = boardSize / 7;
     const int cellWidth = (boardSize - cornerSize * 2) / 9;
 
     const int startX = (width() - boardSize) / 2;
@@ -282,6 +94,7 @@ void BoardWidget::updateChatGeometry()
         cellWidth * 9,
         cellWidth * 9
         );
+
     centerRect.adjust(24, 24, -24, -24);
 
     eventChatArea_->setGeometry(centerRect);
@@ -309,19 +122,18 @@ void BoardWidget::paintEvent(QPaintEvent* event)
         );
 
     drawCells(painter);
-    drawPlayerTokens(painter);
 }
 
 void BoardWidget::drawCells(QPainter& painter)
 {
-    const int padding       = 24;
-    const int boardSize     = std::min(width(), height()) - padding * 2;
+    const int padding = 24;
+    const int boardSize = std::min(width(), height()) - padding * 2;
 
-    const int cornerSize    = boardSize / 6;
-    const int cellWidth     = (boardSize - cornerSize * 2) / 9;
+    const int cornerSize = boardSize / 7;
+    const int cellWidth = (boardSize - cornerSize * 2) / 9;
 
-    const int startX        = (width() - boardSize) / 2;
-    const int startY        = (height() - boardSize) / 2;
+    const int startX = (width() - boardSize) / 2;
+    const int startY = (height() - boardSize) / 2;
 
     // углы
     drawCellByIndex(painter, QRect(startX + cornerSize + cellWidth * 9,
@@ -340,7 +152,7 @@ void BoardWidget::drawCells(QPainter& painter)
                                    startY,
                                    cornerSize, cornerSize), 30, BoardCellSide::Corner); // top-right
 
-    // низ: 1..9, справа налево
+    // низ: 1..9, идём справа налево
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -353,7 +165,7 @@ void BoardWidget::drawCells(QPainter& painter)
         drawCellByIndex(painter, rect, i + 1, BoardCellSide::Bottom);
     }
 
-    // лево: 11..19, снизу вверх
+    // лево: 11..19, идём снизу вверх
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -366,7 +178,7 @@ void BoardWidget::drawCells(QPainter& painter)
         drawCellByIndex(painter, rect, 11 + i, BoardCellSide::Left);
     }
 
-    // верх: 21..29, слева направо
+    // верх: 21..29, идём слева направо
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -379,7 +191,7 @@ void BoardWidget::drawCells(QPainter& painter)
         drawCellByIndex(painter, rect, 21 + i, BoardCellSide::Top);
     }
 
-    // право: 31..39, сверху вниз
+    // право: 31..39, идём сверху вниз
     for (int i = 0; i < 9; ++i)
     {
         QRect rect(
@@ -459,24 +271,8 @@ void BoardWidget::drawCell(
 
     if (cell->type == CellType::Corner)
     {
-        if (!cell->imagePath.isEmpty())
-        {
-            QSvgRenderer renderer(cell->imagePath);
-
-            if (renderer.isValid())
-            {
-                renderer.render(
-                    &painter,
-                    rect
-                    );
-            }
-        }
-        else
-        {
-            painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, cell->name);
-        }
+        painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, cell->name);
     }
-
     else if (cell->type == CellType::Chance)
     {
         painter.setPen(QColor("#B56CFF"));
@@ -504,7 +300,9 @@ void BoardWidget::drawCell(
                 if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
                 {
                     painter.translate(imageRect.center());
-                    painter.rotate(-90);
+
+                    if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
+                        painter.rotate(-90);
 
                     QRect rotatedRect(
                         -imageRect.height() / 2,
@@ -513,35 +311,26 @@ void BoardWidget::drawCell(
                         imageRect.width()
                         );
 
-                    QPixmap scaled = pixmap.scaled(
-                        rotatedRect.size(),
-                        Qt::KeepAspectRatio,
-                        Qt::SmoothTransformation
+                    painter.drawPixmap(
+                        rotatedRect,
+                        pixmap.scaled(
+                            rotatedRect.size(),
+                            Qt::KeepAspectRatio,
+                            Qt::SmoothTransformation
+                            )
                         );
-
-                    QPoint pos(
-                        rotatedRect.center().x() - scaled.width() / 2,
-                        rotatedRect.center().y() - scaled.height() / 2
-                        );
-
-                    painter.drawPixmap(pos, scaled);
                 }
                 else
                 {
-                    QPixmap scaled = pixmap.scaled(
-                        imageRect.size(),
-                        Qt::KeepAspectRatio,
-                        Qt::SmoothTransformation
+                    painter.drawPixmap(
+                        imageRect,
+                        pixmap.scaled(
+                            imageRect.size(),
+                            Qt::KeepAspectRatio,
+                            Qt::SmoothTransformation
+                            )
                         );
-
-                    QPoint pos(
-                        imageRect.center().x() - scaled.width() / 2,
-                        imageRect.center().y() - scaled.height() / 2
-                        );
-
-                    painter.drawPixmap(pos, scaled);
                 }
-
 
                 painter.restore();
             }
@@ -609,300 +398,118 @@ QVector<ClientBoardCell> BoardWidget::createDefaultCells() const
 {
     QVector<ClientBoardCell> cells(40);
 
-    auto corner = [&](int id, const QString& name,const QString& imagePath = "")
+    auto corner = [&](int id, const QString& name)
     {
-        cells[id].id        = id;
-        cells[id].type      = CellType::Corner;
-        cells[id].group     = BusinessGroup::None;
-        cells[id].name      = name;
-        cells[id].imagePath = imagePath;
+        cells[id].id = id;
+        cells[id].type = CellType::Corner;
+        cells[id].group = BusinessGroup::None;
+        cells[id].name = name;
     };
 
     auto business = [&](int id, const QString& name, BusinessGroup group, int price, int rent, const QString& imagePath = "")
     {
-        cells[id].id        = id;
-        cells[id].type      = CellType::Business;
-        cells[id].group     = group;
-        cells[id].name      = name;
-        cells[id].price     = price;
-        cells[id].rent      = rent;
-        cells[id].ownerId   = 0;
+        cells[id].id = id;
+        cells[id].type = CellType::Business;
+        cells[id].group = group;
+        cells[id].name = name;
+        cells[id].price = price;
+        cells[id].rent = rent;
+        cells[id].ownerId = 0;
         cells[id].imagePath = imagePath;
     };
 
     auto extraBusiness = [&](int id, const QString& name, BusinessGroup group, int price, int rent, const QString& imagePath = "")
     {
-        cells[id].id        = id;
-        cells[id].type      = CellType::ExtraBusiness;
-        cells[id].group     = group;
-        cells[id].name      = name;
-        cells[id].price     = price;
-        cells[id].rent      = rent;
-        cells[id].ownerId   = 0;
+        cells[id].id = id;
+        cells[id].type = CellType::ExtraBusiness;
+        cells[id].group = group;
+        cells[id].name = name;
+        cells[id].price = price;
+        cells[id].rent = rent;
+        cells[id].ownerId = 0;
         cells[id].imagePath = imagePath;
     };
 
     auto chance = [&](int id)
     {
-        cells[id].id    = id;
-        cells[id].type  = CellType::Chance;
+        cells[id].id = id;
+        cells[id].type = CellType::Chance;
         cells[id].group = BusinessGroup::None;
-        cells[id].name  = "ШАНС";
+        cells[id].name = "ШАНС";
     };
 
     auto chest = [&](int id)
     {
-        cells[id].id    = id;
-        cells[id].type  = CellType::CommunityChest;
+        cells[id].id = id;
+        cells[id].type = CellType::CommunityChest;
         cells[id].group = BusinessGroup::None;
-        cells[id].name  = "КАЗНА";
+        cells[id].name = "КАЗНА";
     };
 
-    corner(0,  "СТАРТ",     ":/resources/img/start.svg");
-    corner(10, "ТЮРЬМА",    ":/resources/img/jail.svg");
-    corner(20, "ПАРКОВКА",  ":/resources/img/parking.svg");
-    corner(30, "ПОЛИЦИЯ",   ":/resources/img/policeman.svg");
+    corner(0,  "СТАРТ");
+    corner(10, "ТЮРЬМА");
+    corner(20, "ПАРКОВКА");
+    corner(30, "ПОЛИЦИЯ");
 
     // НИЗ: справа налево
-    business(1, "Апрель",       BusinessGroup::Pharmacy, 100, 10, ":/resources/img/aprel.svg");
-    business(2, "ЕАптека",      BusinessGroup::Pharmacy, 120, 12, ":/resources/img/eapteka.png");
-    business(3, "Ригла",        BusinessGroup::Pharmacy, 140, 14, ":/resources/img/rigla.png");
+    business(1, "Апрель",          BusinessGroup::Pharmacy, 100, 10);
+    business(2, "Ригла",      BusinessGroup::Pharmacy, 120, 12);
+    business(3, "Ютека",       BusinessGroup::Pharmacy, 140, 14);
 
     chance(4);
 
-    extraBusiness(5, "",        BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_eng.svg");
+    extraBusiness(5, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
 
     chest(6);
 
-    business(7, "lamoda",       BusinessGroup::Clothes, 160, 16,":/resources/img/secondhand.svg");
-    business(8, "h&m",          BusinessGroup::Clothes, 180, 18,":/resources/img/lamoda.svg");
-    business(9, "versace",      BusinessGroup::Clothes, 200, 20,":/resources/img/hm.png");
+    business(7, "Lamoda",          BusinessGroup::Clothes, 160, 16);
+    business(8, "H&M",     BusinessGroup::Clothes, 180, 18);
+    business(9, "Gucci",     BusinessGroup::Clothes, 200, 20);
 
     // ЛЕВО: снизу вверх
-    business(11, "Дикси",       BusinessGroup::FoodMarket, 220, 22,":/resources/img/diksi.svg");
-    business(12, "Магнит",      BusinessGroup::FoodMarket, 240, 24,":/resources/img/magnit.svg");
-    business(13, "Пятерочка",   BusinessGroup::FoodMarket, 260, 26,":/resources/img/5erochka.svg");
+    business(11, "Дикси",    BusinessGroup::FoodMarket, 220, 22);
+    business(12, "Магнит",     BusinessGroup::FoodMarket, 240, 24);
+    business(13, "Пятерочка",    BusinessGroup::FoodMarket, 260, 26);
 
     chance(14);
 
-    extraBusiness(15, "",       BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_sch.svg");
+    extraBusiness(15, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
 
     chest(16);
 
-    business(17, "ВкусВилл",    BusinessGroup::DarkStore, 280, 28,":/resources/img/vkusvill.svg");
-    business(18, "Яндекс Лавка",BusinessGroup::DarkStore, 300, 30,":/resources/img/lavka.svg");
-    business(19, "Самокат",     BusinessGroup::DarkStore, 320, 32,":/resources/img/samokat.svg");
+    business(17, "ВкусВилл",      BusinessGroup::DarkStore, 280, 28);
+    business(18, "Яндекс Лавка",  BusinessGroup::DarkStore, 300, 30);
+    business(19, "Самокат",     BusinessGroup::DarkStore, 320, 32);
 
     // ВЕРХ: слева направо
-    business(21, "Ozon",        BusinessGroup::Marketplace, 340, 34,":/resources/img/ozon.svg");
-    business(22,"Яндекс Маркет",BusinessGroup::Marketplace, 360, 36,":/resources/img/yamarket.svg");
-    business(23, "Wildberries", BusinessGroup::Marketplace, 380, 38,":/resources/img/wb.svg");
+    business(21, "Ozon",    BusinessGroup::Marketplace, 340, 34);
+    business(22, "Яндекс Маркет",    BusinessGroup::Marketplace, 360, 36);
+    business(23, "Wildberries",    BusinessGroup::Marketplace, 380, 38);
 
     chance(24);
 
-    extraBusiness(25, "",       BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_uni.svg");
+    extraBusiness(25, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
 
     chest(26);
 
-    business(27, "Озон банк",   BusinessGroup::Bank, 400, 40,":/resources/img/ozonbank.svg");
-    business(28, "Альфа-банк",  BusinessGroup::Bank, 420, 42,":/resources/img/alfa.svg");
-    business(29, "Сбербанк",    BusinessGroup::Bank, 440, 44,":/resources/img/sber.svg");
+    business(27, "Озон банк",    BusinessGroup::Bank, 400, 40);
+    business(28, "Сбербанк",    BusinessGroup::Bank, 420, 42);
+    business(29, "Т-Банк",    BusinessGroup::Bank, 440, 44);
 
     // ПРАВО: сверху вниз
-    business(31, "Cd project",  BusinessGroup::GameStudio, 460, 46,":/resources/img/cd.svg");
-    business(32, "Rockstar",    BusinessGroup::GameStudio, 480, 48,":/resources/img/rockstar.svg");
-    business(33, "Valve",       BusinessGroup::GameStudio, 500, 50,":/resources/img/valve.svg");
+    business(31, "TCP-Monopoly-Team",    BusinessGroup::GameStudio, 460, 46);
+    business(32, "Rockstar",    BusinessGroup::GameStudio, 480, 48);
+    business(33, "Valve",     BusinessGroup::GameStudio, 500, 50);
 
     chance(34);
 
-    extraBusiness(35, "",       BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_col.svg");
+    extraBusiness(35, "", BusinessGroup::ITEducation, 200, 25,":/resources/img/it_top_university_accurate.svg");
 
     chest(36);
 
-    business(37, "Nvidia",      BusinessGroup::IT, 520, 52,":/resources/img/nvidia.svg");
-    business(38, "OpenAI",      BusinessGroup::IT, 540, 54,":/resources/img/openai.svg");
-    business(39, "Microsoft",   BusinessGroup::IT, 560, 56,":/resources/img/microsoft.svg");
+    business(37, "Nvidia",     BusinessGroup::IT, 520, 52);
+    business(38, "OpenAI",    BusinessGroup::IT, 540, 54);
+    business(39, "Microsoft",  BusinessGroup::IT, 560, 56);
 
     return cells;
-}
-
-QRect BoardWidget::cellRectByIndex(int index) const
-{
-    const int padding = 24;
-    const int boardSize = std::min(width(), height()) - padding * 2;
-
-    const int cornerSize = boardSize / 6;
-    const int cellWidth = (boardSize - cornerSize * 2) / 9;
-
-    const int startX = (width() - boardSize) / 2;
-    const int startY = (height() - boardSize) / 2;
-
-    if (index == 0)
-        return QRect(startX + cornerSize + cellWidth * 9,
-                     startY + cornerSize + cellWidth * 9,
-                     cornerSize,
-                     cornerSize);
-
-    if (index == 10)
-        return QRect(startX,
-                     startY + cornerSize + cellWidth * 9,
-                     cornerSize,
-                     cornerSize);
-
-    if (index == 20)
-        return QRect(startX,
-                     startY,
-                     cornerSize,
-                     cornerSize);
-
-    if (index == 30)
-        return QRect(startX + cornerSize + cellWidth * 9,
-                     startY,
-                     cornerSize,
-                     cornerSize);
-
-    if (index >= 1 && index <= 9)
-    {
-        const int i = index - 1;
-
-        return QRect(startX + cornerSize + (8 - i) * cellWidth,
-                     startY + cornerSize + cellWidth * 9,
-                     cellWidth,
-                     cornerSize);
-    }
-
-    if (index >= 11 && index <= 19)
-    {
-        const int i = index - 11;
-
-        return QRect(startX,
-                     startY + cornerSize + (8 - i) * cellWidth,
-                     cornerSize,
-                     cellWidth);
-    }
-
-    if (index >= 21 && index <= 29)
-    {
-        const int i = index - 21;
-
-        return QRect(startX + cornerSize + i * cellWidth,
-                     startY,
-                     cellWidth,
-                     cornerSize);
-    }
-
-    if (index >= 31 && index <= 39)
-    {
-        const int i = index - 31;
-
-        return QRect(startX + cornerSize + cellWidth * 9,
-                     startY + cornerSize + i * cellWidth,
-                     cornerSize,
-                     cellWidth);
-    }
-
-    return {};
-}
-
-QPoint BoardWidget::tokenPositionForCell(int cellIndex, int tokenIndex, int tokenCount) const
-{
-    const QRect rect = cellRectByIndex(cellIndex);
-
-    if (!rect.isValid())
-        return {};
-
-    const QPoint center = rect.center();
-
-    const int xOffset = 11;
-    const int yOffset = 16;
-
-    QVector<QPoint> offsets;
-
-    if (tokenCount <= 1)
-    {
-        offsets = { QPoint(0, 0) };
-    }
-    else if (tokenCount == 2)
-    {
-        offsets =
-            {
-                QPoint(-xOffset, 0),
-                QPoint( xOffset, 0)
-            };
-    }
-    else if (tokenCount == 3)
-    {
-        offsets =
-            {
-                QPoint(-xOffset, -yOffset),
-                QPoint( xOffset, -yOffset),
-                QPoint(0, yOffset)
-            };
-    }
-    else if (tokenCount == 4)
-    {
-        offsets =
-            {
-                QPoint(-xOffset, -yOffset),
-                QPoint( xOffset, -yOffset),
-                QPoint(-xOffset,  yOffset),
-                QPoint( xOffset,  yOffset)
-            };
-    }
-    else
-    {
-        offsets =
-            {
-                QPoint(-xOffset, -yOffset),
-                QPoint( xOffset, -yOffset),
-                QPoint(-xOffset, 0),
-                QPoint( xOffset, 0),
-                QPoint(-xOffset, yOffset),
-                QPoint( xOffset, yOffset)
-            };
-    }
-
-    const int safeIndex =
-        std::min(tokenIndex, static_cast<int>(offsets.size()) - 1);
-
-    return center + offsets[safeIndex];
-}
-
-void BoardWidget::drawPlayerTokens(QPainter& painter)
-{
-    QHash<int, QVector<ClientGamePlayer>> playersByPosition;
-
-    for (const ClientGamePlayer& player : players_)
-    {
-        if (player.position < 0 || player.position >= 40)
-            continue;
-
-        playersByPosition[player.position].push_back(player);
-    }
-
-    const int tokenSize = 14;
-
-    for (auto it = playersByPosition.begin(); it != playersByPosition.end(); ++it)
-    {
-        const QVector<ClientGamePlayer>& cellPlayers = it.value();
-
-        for (int i = 0; i < cellPlayers.size(); ++i)
-        {
-            const ClientGamePlayer& player = cellPlayers[i];
-
-            QPointF center =
-                currentTokenPosition(player, i, cellPlayers.size());
-
-            QRectF tokenRect(
-                center.x() - tokenSize / 2.0,
-                center.y() - tokenSize / 2.0,
-                tokenSize,
-                tokenSize
-                );
-
-            painter.setBrush(QColor(player.color));
-            painter.setPen(QPen(QColor("#202020"), 2));
-            painter.drawEllipse(tokenRect);
-        }
-    }
 }

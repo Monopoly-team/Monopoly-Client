@@ -17,8 +17,3 @@ void CenterGameWidget::addEvent(const QString& event)
 {
     boardWidget_->addEvent(event);
 }
-
-void CenterGameWidget::setPlayers(const QVector<ClientGamePlayer>& players)
-{
-    boardWidget_->setPlayers(players);
-}

@@ -13,7 +13,6 @@ GameWidget::GameWidget(QWidget *parent)
     rootLayout_->addWidget(centerGameWidget_,6);
 
     connect(centerGameWidget_, &CenterGameWidget::messageSent, this, &GameWidget::messageSent);
-
 }
 
 GameWidget::~GameWidget() = default;
@@ -26,5 +25,4 @@ void GameWidget::addEvent(const QString& event)
 void GameWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
 {
     leftPanelWidget_->updatePlayers(players);
-    centerGameWidget_->setPlayers(players);
 }

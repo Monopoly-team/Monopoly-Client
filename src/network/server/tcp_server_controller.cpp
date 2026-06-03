@@ -22,11 +22,6 @@ TcpServerController::~TcpServerController() = default;
 
 bool TcpServerController::startServer(quint16 port)
 {
-    if (server_->isListening())
-    {
-        qDebug() << "[Server] already listening";
-        return false;
-    }
     if(!server_->listen(QHostAddress::Any,port))
     {
         qDebug() << "[Server] start failed" << server_->errorString();
@@ -38,7 +33,6 @@ bool TcpServerController::startServer(quint16 port)
 
 void TcpServerController::onNewConnection()
 {
-    //TODO: не принимать если игра началась / максимум игроков / есть админ
     QTcpSocket* clientSocket = server_->nextPendingConnection();
     if(!clientSocket)
         return;
@@ -69,35 +63,13 @@ void TcpServerController::onDisconnect()
         qDebug() << "[Server] Admin Disconnected";
         admin_ = nullptr;
     }
-    else if (players_.contains(clientSocket))
+    else if(players_.contains(clientSocket))
     {
         players_.remove(clientSocket);
-
-        if (players_.isEmpty())
-        {
-            qDebug() << "[Server] No players left. Closing game server.";
-
-            gameStarted_ = false;
-            countdownActive_ = false;
-            startCountdownTimer_->stop();
-
-            if (server_->isListening())
-                server_->close();
-
-            if (admin_)
-            {
-                admin_->disconnectFromHost();
-                admin_ = nullptr;
-            }
-        }
-        else
-        {
-            broadcastLobbyUpdate();
-        }
+        broadcastLobbyUpdate();
     }
 
     clientSocket->deleteLater();
-    sendLobbyPlayersToAdmin();
 }
 
 void TcpServerController::onReadyRead()
@@ -141,7 +113,7 @@ void TcpServerController::onCountdownTick()
     }
     QJsonObject payload;
     payload["secondsLeft"] = countdownSecondsLeft_;
-    broadcastToPlayers(
+    broadcastMessage(
         NetworkMessage::create(
             "countdown_update",
             SERVER_ID,
@@ -150,31 +122,30 @@ void TcpServerController::onCountdownTick()
         );
 }
 
-void TcpServerController::handleMessage(QTcpSocket* senderSocket, const QJsonObject& message)
+
+
+void TcpServerController::handleMessage(QTcpSocket *senderSocket, const QJsonObject &message)
 {
     const QString type = message["type"].toString();
 
-    qDebug() << "[Server] received" << type << message;
+    qDebug() << "[Server] received " << type << message;
 
-    if (type == "connect_request")
+    if(type == "connect_request")
     {
-        handleConnectRequest(senderSocket, message);
+        handleConnectRequest(senderSocket,message);
         return;
     }
-
-    if (senderSocket == admin_)
+    if(type == "chat_message")
     {
-        handleAdminMessage(senderSocket, message);
+        handleChatMessage(senderSocket, message);
         return;
     }
-
-    if (players_.contains(senderSocket))
+    if(type == "ready_changed")
     {
-        handlePlayerMessage(senderSocket, message);
+        handleReadyChanged(senderSocket,message);
         return;
     }
-
-    qDebug() << "[Server] message from unknown socket:" << type;
+    qDebug() << "[Server] unhandled type: " << type;
 }
 
 void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const QJsonObject &message)
@@ -211,36 +182,19 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
 
         QJsonObject acceptedPayload;
         acceptedPayload["access"] = "accepted";
-
-
-        admin_ = senderSocket;
-        sendToAdmin(NetworkMessage::create(
-                         "connect_accept",
-                         SERVER_ID,
-                         acceptedPayload
+        sendToClient(senderSocket,
+                     NetworkMessage::create(
+                        "connect_accept",
+                        SERVER_ID,
+                        acceptedPayload
                          )
                      );
+        admin_ = senderSocket;
         qDebug() << "[Server] Admin connected successfully";
 
-        sendLobbyPlayersToAdmin();
-        if(gameStarted_) sendToAdmin(gameStartedMessage());
-
         return;
     }
-    if (gameStarted_)
-    {
-        QJsonObject payload;
-        payload["code"] = "game_already_started";
-        payload["message"] = "Игра уже началась";
 
-        sendToClient(
-            senderSocket,
-            NetworkMessage::create("error", SERVER_ID, payload)
-            );
-
-        senderSocket->disconnectFromHost();
-        return;
-    }
     if (players_.size() >= MAX_PLAYERS)
     {
         QJsonObject payload;
@@ -280,7 +234,6 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
 
     sendToClient(senderSocket, acceptedMessage);
     broadcastLobbyUpdate();
-    sendLobbyPlayersToAdmin();
 
 }
 
@@ -331,36 +284,7 @@ void TcpServerController::broadcastLobbyUpdate()
             SERVER_ID,
             payload
         );
-    broadcastToPlayers(message);
-}
-
-void TcpServerController::sendLobbyPlayersToAdmin()
-{
-    if (!admin_ || admin_->state() != QAbstractSocket::ConnectedState)
-        return;
-
-    QJsonArray playersArray;
-
-    for (const ServerPlayer& player : players_)
-    {
-        QJsonObject obj;
-        obj["id"] = player.id;
-        obj["name"] = player.nickname;
-        obj["isConnected"] = true;
-
-        playersArray.append(obj);
-    }
-
-    QJsonObject payload;
-    payload["players"] = playersArray;
-
-    sendToAdmin(
-        NetworkMessage::create(
-            "players_list_lobby",
-            SERVER_ID,
-            payload
-            )
-        );
+    broadcastMessage(message);
 }
 
 void TcpServerController::checkGameStart()
@@ -374,24 +298,18 @@ void TcpServerController::checkGameStart()
         cancelCountdown();
     }
 }
-QJsonObject TcpServerController::gameStartedMessage()
-{
-    return NetworkMessage::create(
-        "game_started",
-        SERVER_ID,
-        {}
-        );
-}
 
 void TcpServerController::startGame()
 {
-    if (gameStarted_)
-        return;
-
-    gameStarted_ = true;
     qDebug() << "[Server] Starting game";
 
-    broadcastMessage(gameStartedMessage());
+    broadcastMessage(
+        NetworkMessage::create(
+            "game_started",
+            SERVER_ID,
+            {}
+            )
+        );
 
     QJsonArray playersArray;
 
@@ -429,7 +347,7 @@ void TcpServerController::startGame()
     payload["players"] = playersArray;
     payload["cells"] = QJsonArray{};
 
-    broadcastToPlayers(
+    broadcastMessage(
         NetworkMessage::create(
             "game_state",
             SERVER_ID,
@@ -440,13 +358,13 @@ void TcpServerController::startGame()
     QJsonObject eventPayload;
     eventPayload["text"] = "Игра началась";
 
-    broadcastToPlayers(
+    broadcastMessage(
         NetworkMessage::create(
             "game_event",
             SERVER_ID,
             eventPayload
             )
-    );
+        );
 }
 
 void TcpServerController::startCountdown()
@@ -458,7 +376,7 @@ void TcpServerController::startCountdown()
 
     QJsonObject payload;
     payload["secondsLeft"] = countdownSecondsLeft_;
-    broadcastToPlayers(
+    broadcastMessage(
         NetworkMessage::create(
                 "countdown_update",
                 SERVER_ID,
@@ -475,7 +393,7 @@ void TcpServerController::cancelCountdown()
     countdownActive_ = false;
     startCountdownTimer_->stop();
 
-    broadcastToPlayers(
+    broadcastMessage(
         NetworkMessage::create(
             "countdown_cancelled",
             SERVER_ID,
@@ -496,11 +414,6 @@ bool TcpServerController::areAllPlayersReady() const
     return true;
 }
 
-bool TcpServerController::isListening() const
-{
-    return server_->isListening();
-}
-
 
 void TcpServerController::sendToClient(QTcpSocket *client, const QJsonObject &message)
 {
@@ -516,29 +429,6 @@ void TcpServerController::broadcastMessage(const QJsonObject &message)
         sendToClient(client, message);
 
     qDebug() << "[Server] broadcasted " << message["type"].toString();
-}
-
-void TcpServerController::broadcastToPlayers(const QJsonObject& message)
-{
-    for (auto it = players_.begin(); it != players_.end(); ++it)
-    {
-        QTcpSocket* socket = it.key();
-        sendToClient(socket, message);
-    }
-
-    qDebug() << "[Server] broadcasted to players"
-             << message["type"].toString();
-}
-
-void TcpServerController::sendToAdmin(const QJsonObject& message)
-{
-    if (!admin_)
-        return;
-
-    sendToClient(admin_, message);
-
-    qDebug() << "[Server] sent to admin"
-             << message["type"].toString();
 }
 
 void TcpServerController::handleChatMessage(QTcpSocket* senderSocket, const QJsonObject& message)
@@ -558,128 +448,5 @@ void TcpServerController::handleChatMessage(QTcpSocket* senderSocket, const QJso
             payload
             );
 
-    broadcastToPlayers(broadcast);
-}
-
-void TcpServerController::handleAdminMessage(QTcpSocket* senderSocket, const QJsonObject& message)
-{
-    Q_UNUSED(senderSocket);
-
-    const QString type = message["type"].toString();
-
-    if (type == "admin_action")
-    {
-        handleAdminAction(message);
-        return;
-    }
-
-    qDebug() << "[Server] unhandled admin type:" << type;
-}
-
-void TcpServerController::handleAdminAction(const QJsonObject& message)
-{
-    const QJsonObject payload = message["payload"].toObject();
-    const QString action = payload["action"].toString();
-
-    if(action == "kick")
-    {
-        handleKickPlayer(payload["playerId"].toInt());
-        return;
-    }
-
-    qDebug() << "[Server] unknown admin action:" << action;
-}
-
-void TcpServerController::handleKickPlayer(quint16 playerId)
-{
-    for(auto it = players_.begin(); it != players_.end(); ++it)
-    {
-        if(it.value().id != playerId)
-            continue;
-        if (it.value().id == 1)
-        {
-            qDebug() << "[Server] Host kicked. Shutting down game.";
-            shutdownGame("host_kicked");
-            return;
-        }
-        QTcpSocket* socket = it.key();
-
-        qDebug() << "[Server] kicking player"
-                 << it.value().nickname
-                 << playerId;
-
-        QJsonObject payload;
-        payload["reason"] = "kicked_by_admin";
-
-        sendToClient(
-            socket,
-            NetworkMessage::create(
-                "server_disconnect",
-                SERVER_ID,
-                payload
-                )
-            );
-
-        socket->disconnectFromHost();
-
-        return;
-    }
-
-    qDebug() << "[Server] player not found:" << playerId;
-}
-
-void TcpServerController::handlePlayerMessage(QTcpSocket* senderSocket, const QJsonObject& message)
-{
-    const QString type = message["type"].toString();
-
-    if (type == "chat_message")
-    {
-        handleChatMessage(senderSocket, message);
-        return;
-    }
-
-    if (type == "ready_changed")
-    {
-        handleReadyChanged(senderSocket, message);
-        return;
-    }
-
-    qDebug() << "[Server] unhandled player type:" << type;
-}
-
-void TcpServerController::shutdownGame(const QString& reason)
-{
-    QJsonObject payload;
-    payload["reason"] = reason;
-
-    QJsonObject message = NetworkMessage::create(
-        "server_disconnect",
-        SERVER_ID,
-        payload
-        );
-        if (admin_)
-        {
-            sendToClient(admin_, message);
-            admin_->disconnectFromHost();
-            admin_ = nullptr;
-        }
-    for (auto it = players_.begin(); it != players_.end(); ++it)
-    {
-        sendToClient(it.key(), message);
-        it.key()->disconnectFromHost();
-    }
-
-
-
-    players_.clear();
-    clients_.clear();
-
-    gameStarted_ = false;
-    countdownActive_ = false;
-    startCountdownTimer_->stop();
-    nextPlayerId_ = 1;
-    if (server_->isListening())
-        server_->close();
-
-    qDebug() << "[Server] Game shutdown:" << reason;
+    broadcastMessage(broadcast);
 }

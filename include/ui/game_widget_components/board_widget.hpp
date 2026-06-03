@@ -1,7 +1,6 @@
 #pragma once
 
 #include "game/models/client_board_cell.hpp"
-#include "network/client/tcp_client_controller.hpp"
 
 #include <QWidget>
 #include <QFrame>
@@ -9,9 +8,6 @@
 #include <QLineEdit>
 #include <QPainter>
 #include <QRect>
-#include <QTimer>
-#include <QElapsedTimer>
-#include <QHash>
 
 enum class BoardCellSide
 {
@@ -33,7 +29,6 @@ public:
     void addEvent(const QString& event);
     void clearEvents();
     void setCells(const QVector<ClientBoardCell>& cells);
-    void setPlayers(const QVector<ClientGamePlayer>& players);
 signals:
     void messageSent(const QString& message);
 
@@ -51,40 +46,10 @@ private:
 
     QVector<ClientBoardCell> createDefaultCells() const;
 
-    QRect   cellRectByIndex(int index) const;
-    QPoint  tokenPositionForCell(int cellIndex, int tokenIndex, int tokenCount) const;
-    void    drawPlayerTokens(QPainter& painter);
-
-    void            updateTokenAnimations();
-    QPointF         currentTokenPosition(const ClientGamePlayer& player, int tokenIndex, int tokenCount) const;
-    QVector<int>    buildMovePath(int from, int to) const;
-    void            startTokenAnimation(quint16 playerId,int fromPosition,int toPosition);
-
 private:
-    struct TokenAnimation
-    {
-        QVector<int> path;
-        int currentStep = 0;
-
-        QPointF from;
-        QPointF to;
-
-        float progress = 0.0f;
-    };
-
     QFrame*                     eventChatArea_;
     QTextEdit*                  eventsView_;
     QLineEdit*                  chatInput_;
     QVector<ClientBoardCell>    cells_;
-    QVector<ClientGamePlayer>   players_;
-
-    QTimer* animationTimer_;
-    QElapsedTimer animationClock_;
-
-    QHash<quint16, QPointF> tokenPositions_;
-    QHash<quint16, TokenAnimation> tokenAnimations_;
-    QHash<quint16, int> playerPositions_;
-
-
 };
 

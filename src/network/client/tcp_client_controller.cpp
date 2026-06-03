@@ -99,11 +99,6 @@ void TcpClientController::handleMessage(const QJsonObject& message)
         handleGameState(message);
         return;
     }
-    if(type == "server_disconnect")
-    {
-        handleServerDisconnect(message);
-        return;
-    }
     if (type == "error")
     {
         handleError(message);
@@ -111,16 +106,7 @@ void TcpClientController::handleMessage(const QJsonObject& message)
     }
     qDebug() << "[Client] Unhandled type: " << type;
 }
-void TcpClientController::handleServerDisconnect(const QJsonObject& message)
-{
-    const QJsonObject payload = message["payload"].toObject();
 
-    emit serverDisconnectRequested(
-        payload["reason"].toString()
-        );
-
-    socket_->disconnectFromHost();
-}
 void TcpClientController::handleConnectAccepted(const QJsonObject &message)
 {
     const QJsonObject payload = message["payload"].toObject();

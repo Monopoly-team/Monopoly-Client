@@ -28,37 +28,23 @@ public:
     ~TcpServerController() override;
 
     bool startServer(quint16 port);
-    bool isListening() const;
+
 private:
     void handleMessage(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleConnectRequest(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleReadyChanged(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleChatMessage(QTcpSocket* senderSocket, const QJsonObject &message);
 
-    void handleAdminMessage(QTcpSocket* senderSocket, const QJsonObject &message);
-    void handlePlayerMessage(QTcpSocket* senderSocket, const QJsonObject &message);
-
-    void handleAdminAction(const QJsonObject& message);
-    void handleKickPlayer(quint16 playerId);
-
-
     void sendToClient(QTcpSocket* client, const QJsonObject& message);
     void broadcastMessage(const QJsonObject& message);
-    void broadcastToPlayers(const QJsonObject& message);
-    void sendToAdmin(const QJsonObject& message);
 
     void broadcastLobbyUpdate();
-    void sendLobbyPlayersToAdmin();
 
     void checkGameStart();
     void startGame();
     void startCountdown();
     void cancelCountdown();
     bool areAllPlayersReady() const;
-
-    void shutdownGame(const QString& reason);
-
-    QJsonObject gameStartedMessage();
 private:
     QTcpServer*                         server_;
     QVector<QTcpSocket*>                clients_;
@@ -68,10 +54,6 @@ private:
     QTimer*                             startCountdownTimer_;
     int                                 countdownSecondsLeft_   = 5;
     bool                                countdownActive_        = false;
-    bool                                gameStarted_ = false;
-
-
-
 
 };
 
