@@ -79,9 +79,4 @@ void AuctionDialog::updateAuction(
         );
 
     bidEdit_->setPlaceholderText(QString("Минимум %1").arg(currentBid + 1));
-
-    const int currentInput = bidEdit_->text().toInt();
-
-    if (currentInput <= currentBid)
-        bidEdit_->clear();
 }
