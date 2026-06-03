@@ -59,6 +59,13 @@ BoardWidget::~BoardWidget() = default;
 void BoardWidget::addEvent(const QString& event)
 {
     QString matchedNickname;
+
+    if (const ClientGamePlayer* turnPlayer = playerInTurnEvent(event, &matchedNickname))
+    {
+        appendTurnEventLine(event, *turnPlayer, matchedNickname);
+        return;
+    }
+
     const ClientGamePlayer* player = playerAtEventStart(event, &matchedNickname);
 
     if (!player)
@@ -69,18 +76,23 @@ void BoardWidget::addEvent(const QString& event)
 
     QString actionText = event.mid(matchedNickname.length()).trimmed();
 
-    if (actionText.startsWith(':') || actionText.startsWith('-') || actionText.startsWith(QChar(0x2014)))
+    if (actionText.startsWith(':') ||
+        actionText.startsWith('-') ||
+        actionText.startsWith(QChar(0x2014)))
+    {
         actionText = actionText.mid(1).trimmed();
+    }
 
-    appendPlayerLine(*player, actionText);
+    appendPlayerEventLine(*player, actionText);
 }
+
 void BoardWidget::addChatMessage(quint16 playerId, const QString& nickname, const QString& text)
 {
     const ClientGamePlayer* player = playerById(playerId);
 
     if (player)
     {
-        appendPlayerLine(*player, text);
+        appendChatLine(*player, text);
         return;
     }
 
@@ -426,12 +438,141 @@ const ClientGamePlayer* BoardWidget::playerAtEventStart(const QString& eventText
     return matchedPlayer;
 }
 
+const ClientGamePlayer* BoardWidget::playerInTurnEvent(const QString& eventText, QString* matchedNickname) const
+{
+    const QString trimmedText = eventText.trimmed();
+
+    const QStringList prefixes = {
+        QStringLiteral("Ход игрока "),
+        QStringLiteral("Первым ходит ")
+    };
+
+    for (const QString& prefix : prefixes)
+    {
+        if (!trimmedText.startsWith(prefix))
+            continue;
+
+        QString namePart = trimmedText.mid(prefix.length()).trimmed();
+
+        if (namePart.endsWith('.'))
+            namePart.chop(1);
+
+        namePart = namePart.trimmed();
+
+        const ClientGamePlayer* matchedPlayer = nullptr;
+        QString matchedName;
+
+        for (const ClientGamePlayer& player : players_)
+        {
+            const QString nickname = player.nickname.trimmed();
+
+            if (nickname.isEmpty())
+                continue;
+
+            if (namePart != nickname)
+                continue;
+
+            if (!matchedPlayer || nickname.length() > matchedName.length())
+            {
+                matchedPlayer = &player;
+                matchedName = nickname;
+            }
+        }
+
+        if (matchedNickname)
+            *matchedNickname = matchedName;
+
+        return matchedPlayer;
+    }
+
+    if (matchedNickname)
+        matchedNickname->clear();
+
+    return nullptr;
+}
+
 QColor BoardWidget::displayColorForPlayer(const ClientGamePlayer& player) const
 {
     return PlayerVisuals::displayColor(player, winnerId_);
 }
 
-void BoardWidget::appendPlayerLine(const ClientGamePlayer& player, const QString& text)
+QString BoardWidget::iconForEventText(const QString& text) const
+{
+    const QString lowerText = text.toLower();
+
+    if (lowerText.contains(QStringLiteral("взял карточку")) ||
+        lowerText.contains(QStringLiteral("карточку chance")) ||
+        lowerText.contains(QStringLiteral("карточку community chest")))
+    {
+        return QString::fromUtf8("🃏");
+    }
+
+    if (lowerText.startsWith(QStringLiteral("ход игрока")) ||
+        lowerText.contains(QStringLiteral("следующий ход")) ||
+        lowerText.contains(QStringLiteral("ходит")))
+    {
+        return QString::fromUtf8("🎯");
+    }
+
+    if (lowerText.contains(QStringLiteral("остановился на клетке")))
+    {
+        return QString::fromUtf8("📍");
+    }
+
+    if (lowerText.contains(QStringLiteral("побед")) ||
+        lowerText.contains(QStringLiteral("выиграл игру")) ||
+        lowerText.contains(QStringLiteral("игра окончена")))
+    {
+        return QString::fromUtf8("🏆");
+    }
+
+    if (lowerText.contains(QStringLiteral("банкрот")))
+    {
+        return QString::fromUtf8("⚠️");
+    }
+
+    if (lowerText.contains(QStringLiteral("тюрьм")))
+    {
+        return QString::fromUtf8("🚔");
+    }
+
+    if (lowerText.contains(QStringLiteral("торг")) ||
+        lowerText.contains(QStringLiteral("ставк")) ||
+        lowerText.contains(QStringLiteral("аукцион")))
+    {
+        return QString::fromUtf8("🔨");
+    }
+
+    if (lowerText.contains(QStringLiteral("улучш")) ||
+        lowerText.contains(QStringLiteral("постро")))
+    {
+        return QString::fromUtf8("🏠");
+    }
+
+    if (lowerText.contains(QStringLiteral("аренд")) ||
+        lowerText.contains(QStringLiteral("заплатил")) ||
+        lowerText.contains(QStringLiteral("получил аренду")))
+    {
+        return QString::fromUtf8("🏦");
+    }
+
+    if (lowerText.contains(QStringLiteral("купил")) ||
+        lowerText.contains(QStringLiteral("купить")) ||
+        lowerText.contains(QStringLiteral("покуп")))
+    {
+        return QString::fromUtf8("💰");
+    }
+
+    if (lowerText.contains(QStringLiteral("выбросил")) ||
+        lowerText.contains(QStringLiteral("кубик")) ||
+        lowerText.contains(QStringLiteral("кубики")))
+    {
+        return QString::fromUtf8("🎲");
+    }
+
+    return QString();
+}
+void BoardWidget::appendChatLine(const ClientGamePlayer& player, const QString& text)
 {
     const QString safeNickname = player.nickname.toHtmlEscaped();
     const QString safeText = text.toHtmlEscaped();
@@ -440,7 +581,7 @@ void BoardWidget::appendPlayerLine(const ClientGamePlayer& player, const QString
     eventsView_->append(
         QStringLiteral(
             "<span style=\"color:%1; font-weight:800;\">%2:</span> "
-            "<span style=\"color:#EDEDED;\">%3</span>"
+            "<span style=\"color:#EDEDED; font-weight:600;\">%3</span>"
             )
             .arg(colorName)
             .arg(safeNickname)
@@ -448,13 +589,105 @@ void BoardWidget::appendPlayerLine(const ClientGamePlayer& player, const QString
         );
 }
 
-void BoardWidget::appendSystemLine(const QString& text)
+void BoardWidget::appendPlayerEventLine(const ClientGamePlayer& player, const QString& text)
 {
+    const QString safeNickname = player.nickname.toHtmlEscaped();
+    const QString safeText = text.toHtmlEscaped();
+    const QString colorName = displayColorForPlayer(player).name();
+
+    QString iconHtml;
+    const QString icon = iconForEventText(text);
+
+    if (!icon.isEmpty())
+    {
+        iconHtml = QStringLiteral(
+                       "<span style=\"font-size:16px; font-weight:800;\">%1</span> "
+                       ).arg(icon.toHtmlEscaped());
+    }
+
     eventsView_->append(
         QStringLiteral(
-            "<span style=\"color:rgba(255,255,255,0.74); font-weight:600;\">%1</span>"
+            "%1"
+            "<span style=\"color:%2; font-weight:900;\">%3</span> "
+            "<span style=\"color:#EDEDED; font-weight:600;\">%4</span>"
             )
-            .arg(text.toHtmlEscaped())
+            .arg(iconHtml)
+            .arg(colorName)
+            .arg(safeNickname)
+            .arg(safeText)
+        );
+}
+
+void BoardWidget::appendTurnEventLine(
+    const QString& eventText,
+    const ClientGamePlayer& player,
+    const QString& nickname
+    )
+{
+    const QString icon = iconForEventText(eventText);
+    const QString colorName = displayColorForPlayer(player).name();
+
+    QString iconHtml;
+
+    if (!icon.isEmpty())
+    {
+        iconHtml = QStringLiteral(
+                       "<span style=\"font-size:16px; font-weight:800;\">%1</span> "
+                       ).arg(icon.toHtmlEscaped());
+    }
+
+    const int nicknameIndex = eventText.indexOf(nickname);
+
+    if (nicknameIndex < 0)
+    {
+        appendSystemLine(eventText);
+        return;
+    }
+
+    const QString beforeNickname = eventText.left(nicknameIndex).toHtmlEscaped();
+    const QString safeNickname = nickname.toHtmlEscaped();
+    const QString afterNickname = eventText.mid(nicknameIndex + nickname.length()).toHtmlEscaped();
+
+    eventsView_->append(
+        QStringLiteral(
+            "%1"
+            "<span style=\"color:#EDEDED; font-weight:600;\">%2</span>"
+            "<span style=\"color:%3; font-weight:900;\">%4</span>"
+            "<span style=\"color:#EDEDED; font-weight:600;\">%5</span>"
+            )
+            .arg(iconHtml)
+            .arg(beforeNickname)
+            .arg(colorName)
+            .arg(safeNickname)
+            .arg(afterNickname)
+        );
+}
+
+void BoardWidget::appendSystemLine(const QString& text, bool withEventIcon)
+{
+    const QString safeText = text.toHtmlEscaped();
+
+    QString iconHtml;
+
+    if (withEventIcon)
+    {
+        const QString icon = iconForEventText(text);
+
+        if (!icon.isEmpty())
+        {
+            iconHtml = QStringLiteral(
+                           "<span style=\"font-size:16px; font-weight:800;\">%1</span> "
+                           ).arg(icon.toHtmlEscaped());
+        }
+    }
+
+    eventsView_->append(
+        QStringLiteral(
+            "%1"
+            "<span style=\"color:rgba(255,255,255,0.74); font-weight:600;\">%2</span>"
+            )
+            .arg(iconHtml)
+            .arg(safeText)
         );
 }
 

@@ -70,13 +70,18 @@ private:
     bool canBuildOnCellEvenly(const ClientBoardCell& cell) const;
 
     QString ownerNameById(quint16 playerId) const;
+
     const ClientGamePlayer* playerById(quint16 playerId) const;
     const ClientGamePlayer* playerAtEventStart(const QString& eventText, QString* matchedNickname = nullptr) const;
+    const ClientGamePlayer* playerInTurnEvent(const QString& eventText, QString* matchedNickname = nullptr) const;
 
     QColor displayColorForPlayer(const ClientGamePlayer& player) const;
+    QString iconForEventText(const QString& text) const;
 
-    void appendPlayerLine(const ClientGamePlayer& player, const QString& text);
-    void appendSystemLine(const QString& text);
+    void appendChatLine(const ClientGamePlayer& player, const QString& text);
+    void appendPlayerEventLine(const ClientGamePlayer& player, const QString& text);
+    void appendTurnEventLine(const QString& eventText, const ClientGamePlayer& player, const QString& nickname);
+    void appendSystemLine(const QString& text, bool withEventIcon = true);
 
 
 private:
