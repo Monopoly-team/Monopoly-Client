@@ -33,6 +33,14 @@ AudioService::AudioService(QObject* parent)
     gameStartSound_ = new QSoundEffect(this);
     gameStartSound_->setSource(QUrl("qrc:/resources/audio/game_start.wav"));
     gameStartSound_->setVolume(0.7f);
+
+    buySound_ = new QSoundEffect(this);
+    buySound_->setSource(QUrl("qrc:/resources/audio/buy_sound.wav"));
+    buySound_->setVolume(0.5f);
+
+    auctionStartSound_ = new QSoundEffect(this);
+    auctionStartSound_->setSource(QUrl("qrc:/resources/audio/auction_start.wav"));
+    auctionStartSound_->setVolume(0.5f);
 }
 
 void AudioService::startBackgroundMusic()
@@ -66,6 +74,9 @@ void AudioService::playJoinSound()
 
 void AudioService::playDiceSound()
 {
+    if (diceSound_->isPlaying())
+        diceSound_->stop();
+
     diceSound_->play();
 }
 
@@ -77,4 +88,20 @@ void AudioService::setMusicVolume(float volume)
 float AudioService::musicVolume() const
 {
     return musicOutput_->volume();
+}
+
+void AudioService::playBuySound()
+{
+    if (buySound_->isPlaying())
+        buySound_->stop();
+
+    buySound_->play();
+}
+
+void AudioService::playAuctionStartSound()
+{
+    if (auctionStartSound_->isPlaying())
+        auctionStartSound_->stop();
+
+    auctionStartSound_->play();
 }

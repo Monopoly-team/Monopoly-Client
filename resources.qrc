@@ -47,5 +47,7 @@
         <file>resources/audio/dice_sound.wav</file>
         <file>resources/audio/game_start.wav</file>
         <file>resources/img/game.ico</file>
+        <file>resources/audio/buy_sound.wav</file>
+        <file>resources/audio/auction_start.wav</file>
     </qresource>
 </RCC>

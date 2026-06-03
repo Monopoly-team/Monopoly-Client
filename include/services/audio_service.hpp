@@ -23,6 +23,8 @@ public:
     void playDiceSound();
     void setMusicVolume(float volume);
     float musicVolume() const;
+    void playBuySound();
+    void playAuctionStartSound();
 
 private:
     QMediaPlayer* musicPlayer_;
@@ -33,4 +35,6 @@ private:
     QSoundEffect* gameStartSound_;
     QSoundEffect* joinSound_;
     QSoundEffect* diceSound_;
+    QSoundEffect* buySound_;
+    QSoundEffect* auctionStartSound_;
 };

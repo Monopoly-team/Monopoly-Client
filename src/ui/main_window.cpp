@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(clientController_, &TcpClientController::countdownCancelled,        lobbyWidget_, &LobbyWidget::cancelCountdown);
     connect(gameWidget_,       &GameWidget::messageSent,                        this, &MainWindow::sendChatMessage);
     connect(gameWidget_,       &GameWidget::rollDiceRequested,                  this, &MainWindow::sendRollDiceAction);
+    connect(gameWidget_,       &GameWidget::rollDiceRequested,                  audioService_, &AudioService::playDiceSound);
     connect(clientController_, &TcpClientController::purchaseOfferReceived,     this, &MainWindow::showPurchaseOffer);
     connect(clientController_, &TcpClientController::auctionUpdated,            this, &MainWindow::showAuctionUpdate);
     connect(clientController_, &TcpClientController::auctionFinished,           this, &MainWindow::closeAuctionDialog);
@@ -279,9 +280,13 @@ void MainWindow::showPurchaseOffer(int cellId, const QString& cellName, int pric
 
         connect(purchaseOfferDialog_, &PurchaseOfferDialog::buyRequested,
                 this, &MainWindow::sendBuyBusinessAction);
+        connect(purchaseOfferDialog_, &PurchaseOfferDialog::buyRequested,
+                audioService_, &AudioService::playBuySound);
 
         connect(purchaseOfferDialog_, &PurchaseOfferDialog::auctionRequested,
                 this, &MainWindow::sendStartAuctionAction);
+        connect(purchaseOfferDialog_, &PurchaseOfferDialog::auctionRequested,
+                audioService_, &AudioService::playAuctionStartSound);
     }
 
     purchaseOfferDialog_->setOffer(cellId, cellName, price);
