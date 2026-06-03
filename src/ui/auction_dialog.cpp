@@ -1,7 +1,8 @@
 #include "ui/auction_dialog.hpp"
 
 #include <QLabel>
-#include <QSpinBox>
+#include <QIntValidator>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -26,10 +27,10 @@ AuctionDialog::AuctionDialog(QWidget* parent)
     currentBidLabel_->setObjectName("auctionBidLabel");
     currentBidLabel_->setAlignment(Qt::AlignCenter);
 
-    bidSpinBox_ = new QSpinBox(this);
-    bidSpinBox_->setObjectName("auctionBidInput");
-    bidSpinBox_->setRange(1, 999999);
-    bidSpinBox_->setSingleStep(10);
+    bidEdit_ = new QLineEdit(this);
+    bidEdit_->setObjectName("auctionBidInput");
+    bidEdit_->setPlaceholderText("Введите ставку");
+    bidEdit_->setValidator(new QIntValidator(1, 999999, bidEdit_));
 
     bidButton_ = new QPushButton("Сделать ставку", this);
     bidButton_->setObjectName("primaryDialogButton");
@@ -40,11 +41,11 @@ AuctionDialog::AuctionDialog(QWidget* parent)
     rootLayout->addWidget(titleLabel_);
     rootLayout->addWidget(timerLabel_);
     rootLayout->addWidget(currentBidLabel_);
-    rootLayout->addWidget(bidSpinBox_);
+    rootLayout->addWidget(bidEdit_);
     rootLayout->addWidget(bidButton_);
 
     connect(bidButton_, &QPushButton::clicked, this, [this]() {
-        emit bidRequested(bidSpinBox_->value());
+        emit bidRequested(bidEdit_->text().toInt());
     });
 }
 
@@ -71,8 +72,10 @@ void AuctionDialog::updateAuction(
             .arg(bidder)
         );
 
-    bidSpinBox_->setMinimum(currentBid + 1);
+    bidEdit_->setPlaceholderText(QString("Минимум %1").arg(currentBid + 1));
 
-    if (bidSpinBox_->value() <= currentBid)
-        bidSpinBox_->setValue(currentBid + 1);
+    const int currentInput = bidEdit_->text().toInt();
+
+    if (currentInput <= currentBid)
+        bidEdit_->clear();
 }

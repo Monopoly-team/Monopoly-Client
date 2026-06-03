@@ -3,7 +3,7 @@
 #include <QDialog>
 
 class QLabel;
-class QSpinBox;
+class QLineEdit;
 class QPushButton;
 
 class AuctionDialog : public QDialog
@@ -30,6 +30,6 @@ private:
     QLabel* titleLabel_;
     QLabel* timerLabel_;
     QLabel* currentBidLabel_;
-    QSpinBox* bidSpinBox_;
+    QLineEdit*   bidEdit_;
     QPushButton* bidButton_;
 };
