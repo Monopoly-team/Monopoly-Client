@@ -49,8 +49,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(menuWidget_->joinButton(),   &QPushButton::clicked, audioService_, &AudioService::playJoinSound);
     connect(clientController_,&TcpClientController::gameStarted,audioService_, &AudioService::playGameStart);
 
-
-
     connect(loginWidget_,      &LoginWidget::loginRequested,                    this, &MainWindow::showMenu);
     connect(menuWidget_,       &MenuWidget::createGameRequested,                this, &MainWindow::createGame);
     connect(menuWidget_,       &MenuWidget::joinGameRequested,                  this, &MainWindow::joinGame);
@@ -64,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(gameWidget_,       &GameWidget::messageSent,                        this, &MainWindow::sendChatMessage);
     connect(gameWidget_,       &GameWidget::rollDiceRequested,                  this, &MainWindow::sendRollDiceAction);
     connect(gameWidget_,       &GameWidget::rollDiceRequested,                  audioService_, &AudioService::playDiceSound);
+    connect(gameWidget_,       &GameWidget::buildBusinessRequested,             this, &MainWindow::sendBuildBusinessAction);
     connect(clientController_, &TcpClientController::purchaseOfferReceived,     this, &MainWindow::showPurchaseOffer);
     connect(clientController_, &TcpClientController::auctionUpdated,            this, &MainWindow::showAuctionUpdate);
     connect(clientController_, &TcpClientController::auctionFinished,           this, &MainWindow::closeAuctionDialog);
@@ -387,6 +386,21 @@ void MainWindow::sendAuctionBidAction(int amount)
     QJsonObject payload;
     payload["action"] = "auction_bid";
     payload["amount"] = amount;
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "player_action",
+            clientController_->playerId(),
+            payload
+            )
+        );
+}
+
+void MainWindow::sendBuildBusinessAction(int cellId)
+{
+    QJsonObject payload;
+    payload["action"] = "build_business";
+    payload["cellId"] = cellId;
 
     clientController_->sendMessage(
         NetworkMessage::create(

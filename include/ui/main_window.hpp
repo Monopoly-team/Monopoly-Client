@@ -47,6 +47,7 @@ private slots:
     void updateLocalPlayerState(const ClientGameState& state);
     void sendStartAuctionAction();
     void sendAuctionBidAction(int amount);
+    void sendBuildBusinessAction(int cellId);
 protected:
     void resizeEvent(QResizeEvent* event) override;
 public:

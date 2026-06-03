@@ -1,5 +1,7 @@
 #include "game/game_rules.hpp"
 
+#include <limits>
+
 namespace {
 
 int clampValue(int value, int minValue, int maxValue)
@@ -56,6 +58,7 @@ bool GameRules::canBuildHouse(const GameState& state, const Player& player, cons
            && cell.buildingLevel < cell.maxBuildingLevel
            && player.balance >= cell.buildingCost
            && ownsFullGroup(state, player.id, cell.group)
+           && canBuildEvenly(state, cell)
            && !player.isBankrupt
            && player.active;
 }
@@ -68,6 +71,47 @@ bool GameRules::canBuyBusiness(const Player& player, const Cell& cell)
 bool GameRules::canBuildBusiness(const GameState& state, const Player& player, const Cell& cell)
 {
     return canBuildHouse(state, player, cell);
+}
+
+bool GameRules::canBuildEvenly(const GameState& state, const Cell& targetCell)
+{
+    if (targetCell.type != CellType::Business)
+        return false;
+
+    if (targetCell.group == BusinessGroup::None)
+        return false;
+
+    if (targetCell.ownerId == NO_OWNER_ID)
+        return false;
+
+    int minBuildingLevel = std::numeric_limits<int>::max();
+    int maxBuildingLevel = std::numeric_limits<int>::min();
+
+    bool hasGroupCells = false;
+
+    for (const Cell& cell : state.board())
+    {
+        if (cell.type != CellType::Business || cell.group != targetCell.group)
+            continue;
+
+        if (cell.ownerId != targetCell.ownerId)
+            return false;
+
+        hasGroupCells = true;
+
+        const int nextLevel =
+            cell.id == targetCell.id
+                ? cell.buildingLevel + 1
+                : cell.buildingLevel;
+
+        minBuildingLevel = std::min(minBuildingLevel, nextLevel);
+        maxBuildingLevel = std::max(maxBuildingLevel, nextLevel);
+    }
+
+    if (!hasGroupCells)
+        return false;
+
+    return maxBuildingLevel - minBuildingLevel <= 1;
 }
 
 int GameRules::calculateRent(const GameState& state, const Cell& cell)

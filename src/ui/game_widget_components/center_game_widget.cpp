@@ -9,6 +9,7 @@ CenterGameWidget::CenterGameWidget(QWidget *parent)
     rootLayout_->addWidget(boardWidget_);
 
     connect(boardWidget_, &BoardWidget::messageSent, this, &CenterGameWidget::messageSent);
+    connect(boardWidget_, &BoardWidget::buildBusinessRequested, this, &CenterGameWidget::buildBusinessRequested);
 }
 
 CenterGameWidget::~CenterGameWidget() = default;
@@ -26,4 +27,9 @@ void CenterGameWidget::setPlayers(const QVector<ClientGamePlayer>& players)
 void CenterGameWidget::setCells(const QVector<ClientBoardCell>& cells)
 {
     boardWidget_->setCells(cells);
+}
+
+void CenterGameWidget::setLocalPlayerId(quint16 playerId)
+{
+    boardWidget_->setLocalPlayerId(playerId);
 }

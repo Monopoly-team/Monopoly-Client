@@ -9,6 +9,7 @@ class CenterGameWidget : public QWidget
     Q_OBJECT
 signals:
     void messageSent(const QString& message);
+    void buildBusinessRequested(int cellId);
 public:
     explicit CenterGameWidget(QWidget* parent = nullptr);
     ~CenterGameWidget() override;
@@ -16,6 +17,7 @@ public:
     void addEvent(const QString &event);
     void setPlayers(const QVector<ClientGamePlayer>& players);
     void setCells(const QVector<ClientBoardCell>& cells);
+    void setLocalPlayerId(quint16 playerId);
 private:
     BoardWidget* boardWidget_;
 

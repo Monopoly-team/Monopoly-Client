@@ -1,8 +1,8 @@
 #include "game/game_controller.hpp"
-
 #include "game/game_rules.hpp"
 
 #include <QRandomGenerator>
+#include <QJsonArray>
 
 namespace {
 
@@ -184,7 +184,25 @@ bool GameController::handlePlayerAction(int playerId, const QJsonObject& payload
 
 QJsonObject GameController::gameStateToJson() const
 {
-    return session_.state().toJson();
+    QJsonObject stateJson = session_.state().toJson();
+    QJsonArray cellsJson = stateJson["cells"].toArray();
+
+    for (int i = 0; i < cellsJson.size(); ++i)
+    {
+        QJsonObject cellJson = cellsJson[i].toObject();
+
+        const int cellId = cellJson["id"].toInt(-1);
+        const Cell* cell = session_.state().cellAt(cellId);
+
+        if (cell != nullptr)
+            cellJson["rent"] = GameRules::calculateRent(session_.state(), *cell);
+
+        cellsJson[i] = cellJson;
+    }
+
+    stateJson["cells"] = cellsJson;
+
+    return stateJson;
 }
 
 QStringList GameController::takeEvents()
@@ -729,11 +747,32 @@ bool GameController::buildBusiness(Player& player, Cell& cell)
         return false;
     }
 
-    if (!GameRules::canBuildBusiness(session_.state(), player, cell)) {
+    if (!GameRules::canBuildEvenly(session_.state(), cell))
+    {
+        appendEvent(
+            QStringLiteral("Улучшения в группе нужно строить равномерно. Сначала улучши остальные бизнесы этой группы.")
+            );
+
+        return false;
+    }
+
+    if (player.balance < cell.buildingCost)
+    {
         appendEvent(
             QStringLiteral("%1 не хватает денег на улучшение \"%2\".")
                 .arg(playerName(player))
-                .arg(cell.name));
+                .arg(cell.name)
+            );
+
+        return false;
+    }
+
+    if (!GameRules::canBuildBusiness(session_.state(), player, cell))
+    {
+        appendEvent(
+            QStringLiteral("Строительство улучшения для \"%1\" невозможно.")
+                .arg(cell.name)
+            );
 
         return false;
     }

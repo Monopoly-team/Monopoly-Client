@@ -11,8 +11,9 @@ GameWidget::GameWidget(QWidget *parent)
     rootLayout_->addWidget(leftPanelWidget_,1);
     rootLayout_->addWidget(centerGameWidget_,6);
 
-    connect(centerGameWidget_, &CenterGameWidget::messageSent,      this, &GameWidget::messageSent);
-    connect(leftPanelWidget_,  &LeftPanelWidget::rollDiceRequested, this, &GameWidget::rollDiceRequested);
+    connect(centerGameWidget_, &CenterGameWidget::messageSent,              this, &GameWidget::messageSent);
+    connect(leftPanelWidget_,  &LeftPanelWidget::rollDiceRequested,         this, &GameWidget::rollDiceRequested);
+    connect(centerGameWidget_, &CenterGameWidget::buildBusinessRequested,   this, &GameWidget::buildBusinessRequested);
 }
 
 GameWidget::~GameWidget() = default;
@@ -43,6 +44,7 @@ void GameWidget::updateGameState(const ClientGameState& state)
 void GameWidget::setLocalPlayerId(quint16 playerId)
 {
     localPlayerId_ = playerId;
+    centerGameWidget_->setLocalPlayerId(playerId);
 }
 
 void GameWidget::setAuctionActive(bool active)

@@ -507,3 +507,82 @@ QMessageBox QLabel#qt_msgbox_label
     color: rgba(255,255,255,0.35);
     border: 1px solid rgba(255,255,255,0.10);
 }
+
+QMenu
+{
+    background-color: #1B1F36;
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+
+    padding: 6px;
+}
+
+QMenu::item
+{
+    background: transparent;
+
+    padding: 9px 26px 9px 14px;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QMenu::item:selected
+{
+    background-color: rgba(108,123,255,0.28);
+}
+
+QMenu::item:disabled
+{
+    color: rgba(255,255,255,0.35);
+}
+
+QMenu::separator
+{
+    height: 1px;
+    background: rgba(255,255,255,0.10);
+    margin: 6px 4px;
+}
+
+QMessageBox
+{
+    background-color: #1B1F36;
+}
+
+QMessageBox QLabel
+{
+    color: white;
+    background: transparent;
+
+    font-size: 17px;
+    font-weight: 500;
+}
+
+QMessageBox QPushButton
+{
+    background-color: rgba(255,255,255,0.08);
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 10px;
+
+    min-width: 110px;
+    min-height: 34px;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+QMessageBox QPushButton:hover
+{
+    background-color: rgba(255,255,255,0.15);
+}
+
+QMessageBox QPushButton:pressed
+{
+    background-color: rgba(255,255,255,0.22);
+}

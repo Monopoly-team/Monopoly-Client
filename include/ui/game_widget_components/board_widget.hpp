@@ -21,7 +21,7 @@ enum class BoardCellSide
     Right,
     Corner
 };
-
+class QContextMenuEvent;
 class BoardWidget : public QWidget
 {
     Q_OBJECT
@@ -34,13 +34,14 @@ public:
     void clearEvents();
     void setCells(const QVector<ClientBoardCell>& cells);
     void setPlayers(const QVector<ClientGamePlayer>& players);
+    void setLocalPlayerId(quint16 playerId);
 signals:
     void messageSent(const QString& message);
-
+    void buildBusinessRequested(int cellId);
 protected:
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
-
+    void contextMenuEvent(QContextMenuEvent* event) override;
 private:
     void updateChatGeometry();
     void sendMessage();
@@ -59,6 +60,15 @@ private:
     QPointF         currentTokenPosition(const ClientGamePlayer& player, int tokenIndex, int tokenCount) const;
     QVector<int>    buildMovePath(int from, int to) const;
     void            startTokenAnimation(quint16 playerId,int fromPosition,int toPosition);
+
+    const ClientBoardCell* cellAtPoint(const QPoint& point) const;
+    void showCellContextMenu(const QPoint& globalPosition, const ClientBoardCell& cell);
+    QString cellInfoText(const ClientBoardCell& cell) const;
+    void drawBuildingMarker(QPainter& painter, const QRect& rect, const ClientBoardCell& cell, BoardCellSide side);
+    bool canBuildOnCellEvenly(const ClientBoardCell& cell) const;
+
+    QString ownerNameById(quint16 playerId) const;
+
 
 private:
     struct TokenAnimation
@@ -84,7 +94,7 @@ private:
     QHash<quint16, QPointF> tokenPositions_;
     QHash<quint16, TokenAnimation> tokenAnimations_;
     QHash<quint16, int> playerPositions_;
-
+    quint16 localPlayerId_ = 0;
 
 };
 

@@ -14,6 +14,7 @@ class GameWidget : public QWidget
 signals:
     void messageSent(const QString& message);
     void rollDiceRequested();
+    void buildBusinessRequested(int cellId);
 private slots:
 
 public:
@@ -25,6 +26,7 @@ public:
     void updateGameState(const ClientGameState& state);
     void setLocalPlayerId(quint16 playerId);
     void setAuctionActive(bool active);
+
 private:
     LeftPanelWidget* leftPanelWidget_;
     CenterGameWidget* centerGameWidget_;

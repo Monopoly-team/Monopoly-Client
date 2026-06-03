@@ -283,7 +283,7 @@ void TcpClientController::handleGameState(const QJsonObject& message)
         player.active = object["active"].toBool(true);
         player.isInJail = object["isInJail"].toBool();
         player.isCurrentTurn = player.id == state.currentPlayerId;
-        player.ownedPropertiesCount = object["ownedPrope    rties"].toArray().size();
+        player.ownedPropertiesCount = object["ownedProperties"].toArray().size();
 
         state.players.push_back(player);
     }
@@ -297,12 +297,15 @@ void TcpClientController::handleGameState(const QJsonObject& message)
         ClientBoardCell cell;
 
         cell.id = static_cast<quint8>(object["id"].toInt());
-        cell.name = object["name"].toString();
-        cell.type = cellTypeFromString(object["type"].toString());
-        cell.group = businessGroupFromString(object["group"].toString());
-        cell.price = object["price"].toInt();
-        cell.rent = object["rent"].toInt();
-        cell.ownerId = static_cast<quint16>(object["ownerId"].toInt());
+        cell.name               = object["name"].toString();
+        cell.type               = cellTypeFromString(object["type"].toString());
+        cell.group              = businessGroupFromString(object["group"].toString());
+        cell.price              = object["price"].toInt();
+        cell.rent               = object["rent"].toInt();
+        cell.buildingCost       = object["buildingCost"].toInt();
+        cell.buildingLevel      = object["buildingLevel"].toInt();
+        cell.maxBuildingLevel   = object["maxBuildingLevel"].toInt();
+        cell.ownerId            = static_cast<quint16>(object["ownerId"].toInt());
 
         state.cells.push_back(cell);
     }

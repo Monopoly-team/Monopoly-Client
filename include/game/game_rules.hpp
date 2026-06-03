@@ -2,6 +2,8 @@
 
 #include "game/game_state.hpp"
 
+
+
 class GameRules final
 {
 public:
@@ -14,6 +16,7 @@ public:
 
     static bool canBuyBusiness(const Player& player, const Cell& cell);
     static bool canBuildBusiness(const GameState& state, const Player& player, const Cell& cell);
+    static bool canBuildEvenly(const GameState& state, const Cell& cell);
 
     static int calculateRent(const GameState& state, const Cell& cell);
     static bool checkBankruptcy(const Player& player);
@@ -23,4 +26,5 @@ public:
 
     static int nearestBusinessCellIdFrom(const GameState& state, int position);
     static int propertyMaintenanceCost(const GameState& state, const Player& player, int costPerProperty);
+
 };

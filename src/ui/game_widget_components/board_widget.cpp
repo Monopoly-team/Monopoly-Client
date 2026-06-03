@@ -2,6 +2,11 @@
 #include "game/models/business_group_utils.hpp"
 #include "game/models/cell_type.hpp"
 
+#include <QAction>
+#include <QMessageBox>
+#include <QStringList>
+#include <QMenu>
+#include <QContextMenuEvent>
 #include <QPixmap>
 #include <QPainter>
 #include <QPaintEvent>
@@ -12,6 +17,7 @@
 #include <QPainterPath>
 #include <QSvgRenderer>
 
+#include <limits>
 #include <algorithm>
 
 BoardWidget::BoardWidget(QWidget* parent)
@@ -304,7 +310,142 @@ void BoardWidget::resizeEvent(QResizeEvent* event)
     QWidget::resizeEvent(event);
     updateChatGeometry();
 }
+void BoardWidget::contextMenuEvent(QContextMenuEvent* event)
+{
+    const ClientBoardCell* cell = cellAtPoint(event->pos());
 
+    if (!cell)
+    {
+        QWidget::contextMenuEvent(event);
+        return;
+    }
+
+    showCellContextMenu(event->globalPos(), *cell);
+}
+
+const ClientBoardCell* BoardWidget::cellAtPoint(const QPoint& point) const
+{
+    for (int i = 0; i < cells_.size(); ++i)
+    {
+        if (cellRectByIndex(i).contains(point))
+            return &cells_[i];
+    }
+
+    return nullptr;
+}
+QString BoardWidget::ownerNameById(quint16 playerId) const
+{
+    for (const ClientGamePlayer& player : players_)
+    {
+        if (player.id == playerId)
+            return player.nickname;
+    }
+
+    return QStringLiteral("Игрок %1").arg(playerId);
+}
+bool BoardWidget::canBuildOnCellEvenly(const ClientBoardCell& targetCell) const
+{
+    if (targetCell.type != CellType::Business)
+        return false;
+
+    if (targetCell.group == BusinessGroup::None)
+        return false;
+
+    if (targetCell.ownerId == 0)
+        return false;
+
+    if (targetCell.buildingLevel >= targetCell.maxBuildingLevel)
+        return false;
+
+    int minBuildingLevel = std::numeric_limits<int>::max();
+    int maxBuildingLevel = std::numeric_limits<int>::min();
+
+    bool hasGroupCells = false;
+
+    for (const ClientBoardCell& cell : cells_)
+    {
+        if (cell.type != CellType::Business || cell.group != targetCell.group)
+            continue;
+
+        if (cell.ownerId != targetCell.ownerId)
+            return false;
+
+        hasGroupCells = true;
+
+        const int nextLevel =
+            cell.id == targetCell.id
+                ? cell.buildingLevel + 1
+                : cell.buildingLevel;
+
+        minBuildingLevel = std::min(minBuildingLevel, nextLevel);
+        maxBuildingLevel = std::max(maxBuildingLevel, nextLevel);
+    }
+
+    if (!hasGroupCells)
+        return false;
+
+    return maxBuildingLevel - minBuildingLevel <= 1;
+}
+QString BoardWidget::cellInfoText(const ClientBoardCell& cell) const
+{
+    QStringList lines;
+
+    lines << QStringLiteral("Клетка #%1").arg(cell.id);
+    lines << QStringLiteral("Название: %1").arg(cell.name.isEmpty() ? QStringLiteral("без названия") : cell.name);
+    lines << QStringLiteral("Цена: %1").arg(cell.price);
+    lines << QStringLiteral("Текущая аренда: %1").arg(cell.rent);
+
+    if (cell.ownerId == 0)
+    {
+        lines << QStringLiteral("Владелец: нет");
+    }
+    else
+    {
+        lines << QStringLiteral("Владелец: %1").arg(ownerNameById(cell.ownerId));
+    }
+
+    if (cell.type == CellType::Business)
+    {
+        lines << QStringLiteral("Улучшение: %1/%2").arg(cell.buildingLevel).arg(cell.maxBuildingLevel);
+        lines << QStringLiteral("Стоимость улучшения: %1").arg(cell.buildingCost);
+    }
+
+    return lines.join(QLatin1Char('\n'));
+}
+
+void BoardWidget::showCellContextMenu(const QPoint& globalPosition, const ClientBoardCell& cell)
+{
+    QMenu menu(this);
+
+    QAction* infoAction = menu.addAction(QStringLiteral("Информация о клетке"));
+    QAction* buildAction = menu.addAction(QStringLiteral("Построить улучшение"));
+
+    const bool canRequestBuild =
+        cell.type == CellType::Business &&
+        cell.ownerId == localPlayerId_ &&
+        cell.buildingCost > 0 &&
+        cell.maxBuildingLevel > 0 &&
+        cell.buildingLevel < cell.maxBuildingLevel &&
+        canBuildOnCellEvenly(cell);
+
+    buildAction->setEnabled(canRequestBuild);
+
+    QAction* selectedAction = menu.exec(globalPosition);
+
+    if (selectedAction == infoAction)
+    {
+        QMessageBox::information(
+            this,
+            QStringLiteral("Информация о клетке"),
+            cellInfoText(cell)
+            );
+
+        return;
+    }
+
+    if (selectedAction == buildAction)
+        emit buildBusinessRequested(cell.id);
+}
 void BoardWidget::updateChatGeometry()
 {
     const int padding = 24;
@@ -634,6 +775,8 @@ void BoardWidget::drawCell(
     }
 
     painter.restore();
+    if (isBusiness)
+        drawBuildingMarker(painter, rect, *cell, side);
 }
 void BoardWidget::drawCellByIndex(QPainter& painter, const QRect& rect, int index, BoardCellSide side)
 {
@@ -765,7 +908,106 @@ QVector<ClientBoardCell> BoardWidget::createDefaultCells() const
 
     return cells;
 }
+void BoardWidget::drawBuildingMarker(
+    QPainter& painter,
+    const QRect& rect,
+    const ClientBoardCell& cell,
+    BoardCellSide side
+    )
+{
+    if (cell.type != CellType::Business || cell.buildingLevel <= 0)
+        return;
 
+    const QString house = QString::fromUtf8("🏠");
+    const QString hotel = QString::fromUtf8("🏨");
+
+    QString marker;
+
+    if (cell.maxBuildingLevel > 0 && cell.buildingLevel >= cell.maxBuildingLevel)
+    {
+        marker = hotel;
+    }
+    else
+    {
+        for (int i = 0; i < cell.buildingLevel; ++i)
+            marker += house;
+    }
+
+    if (marker.isEmpty())
+        return;
+
+    constexpr int markerSize = 18;
+    constexpr int margin = 2;
+
+    QRect markerRect;
+
+    if (side == BoardCellSide::Top)
+    {
+        markerRect = QRect(
+            rect.left(),
+            rect.top() - markerSize - margin,
+            rect.width(),
+            markerSize
+            );
+    }
+    else if (side == BoardCellSide::Bottom)
+    {
+        markerRect = QRect(
+            rect.left(),
+            rect.bottom() + margin,
+            rect.width(),
+            markerSize
+            );
+    }
+    else if (side == BoardCellSide::Left)
+    {
+        markerRect = QRect(
+            rect.left() - markerSize - margin,
+            rect.top(),
+            markerSize,
+            rect.height()
+            );
+    }
+    else if (side == BoardCellSide::Right)
+    {
+        markerRect = QRect(
+            rect.right() + margin,
+            rect.top(),
+            markerSize,
+            rect.height()
+            );
+    }
+    else
+    {
+        return;
+    }
+
+    painter.save();
+
+    painter.setFont(QFont("Segoe UI Emoji", 10, QFont::Bold));
+    painter.setPen(Qt::white);
+
+    if (side == BoardCellSide::Left || side == BoardCellSide::Right)
+    {
+        painter.translate(markerRect.center());
+        painter.rotate(side == BoardCellSide::Right ? 90 : -90);
+
+        QRect rotatedRect(
+            -markerRect.height() / 2,
+            -markerRect.width() / 2,
+            markerRect.height(),
+            markerRect.width()
+            );
+
+        painter.drawText(rotatedRect, Qt::AlignCenter, marker);
+    }
+    else
+    {
+        painter.drawText(markerRect, Qt::AlignCenter, marker);
+    }
+
+    painter.restore();
+}
 QRect BoardWidget::cellRectByIndex(int index) const
 {
     const int padding = 24;
@@ -945,4 +1187,9 @@ void BoardWidget::drawPlayerTokens(QPainter& painter)
             painter.drawEllipse(tokenRect);
         }
     }
+}
+
+void BoardWidget::setLocalPlayerId(quint16 playerId)
+{
+    localPlayerId_ = playerId;
 }
