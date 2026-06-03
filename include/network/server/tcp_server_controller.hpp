@@ -36,6 +36,7 @@ private:
     void handleConnectRequest(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleReadyChanged(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleChatMessage(QTcpSocket* senderSocket, const QJsonObject &message);
+    void handlePlayerAction(QTcpSocket* senderSocket, const QJsonObject& message);
 
     void handleAdminMessage(QTcpSocket* senderSocket, const QJsonObject &message);
     void handlePlayerMessage(QTcpSocket* senderSocket, const QJsonObject &message);

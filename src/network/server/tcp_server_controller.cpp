@@ -642,9 +642,53 @@ void TcpServerController::handlePlayerMessage(QTcpSocket* senderSocket, const QJ
         handleReadyChanged(senderSocket, message);
         return;
     }
+    if (type == "player_action")
+    {
+        handlePlayerAction(senderSocket, message);
+        return;
+    }
 
     qDebug() << "[Server] unhandled player type:" << type;
 }
+
+void TcpServerController::handlePlayerAction(QTcpSocket* senderSocket, const QJsonObject& message)
+{
+    if (!players_.contains(senderSocket))
+    {
+        qDebug() << "[Server] player_action from unknown socket";
+        return;
+    }
+
+    if (!gameStarted_)
+    {
+        QJsonObject payload;
+        payload["text"] = "Действие отклонено: игра ещё не началась.";
+
+        sendToClient(
+            senderSocket,
+            NetworkMessage::create(
+                "game_event",
+                SERVER_ID,
+                payload
+                )
+            );
+
+        return;
+    }
+
+    const ServerPlayer& player = players_[senderSocket];
+    const QJsonObject payload = message["payload"].toObject();
+
+    qDebug() << "[Server] player action from"
+             << player.nickname
+             << player.id
+             << payload;
+
+    gameController_->handlePlayerAction(player.id, payload);
+
+    broadcastGameUpdate();
+}
+
 
 void TcpServerController::shutdownGame(const QString& reason)
 {
