@@ -59,13 +59,5 @@ void PlayerCardGameWidget::applyVisualState(const ClientGamePlayer& player, quin
             ).arg(colorName)
         );
 
-    balanceLabel_->setStyleSheet(
-        "color: white;"
-        "background: transparent;"
-        "font-size: 20px;"
-        "font-weight: 700;"
-        "font-family: \"Segoe UI\";"
-        );
-
     setToolTip(PlayerVisuals::statusText(player, winnerId));
 }

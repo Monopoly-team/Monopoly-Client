@@ -496,6 +496,48 @@ QColor BoardWidget::displayColorForPlayer(const ClientGamePlayer& player) const
     return PlayerVisuals::displayColor(player, winnerId_);
 }
 
+QColor BoardWidget::ownerColorForCell(const ClientBoardCell& cell) const
+{
+    if (cell.ownerId == 0)
+        return QColor();
+
+    const ClientGamePlayer* owner = playerById(cell.ownerId);
+
+    if (!owner)
+        return QColor();
+
+    return displayColorForPlayer(*owner);
+}
+
+QColor BoardWidget::backgroundColorForCell(const ClientBoardCell* cell) const
+{
+    const QColor defaultBackground("#EBEBEB");
+
+    if (!cell)
+        return defaultBackground;
+
+    const bool isBusiness =
+        cell->type == CellType::Business ||
+        cell->type == CellType::ExtraBusiness;
+
+    if (!isBusiness)
+        return defaultBackground;
+
+    const QColor ownerColor = ownerColorForCell(*cell);
+
+    if (!ownerColor.isValid())
+        return defaultBackground;
+
+    constexpr int ownerPart = 70;
+    constexpr int basePart = 30;
+
+    return QColor(
+        (ownerColor.red() * ownerPart + defaultBackground.red() * basePart) / 100,
+        (ownerColor.green() * ownerPart + defaultBackground.green() * basePart) / 100,
+        (ownerColor.blue() * ownerPart + defaultBackground.blue() * basePart) / 100
+        );
+}
+
 QString BoardWidget::iconForEventText(const QString& text) const
 {
     const QString lowerText = text.toLower();
@@ -932,7 +974,7 @@ void BoardWidget::drawCell(
     painter.save();
 
     painter.setPen(QPen(QColor("#202020"), 2));
-    painter.setBrush(QColor("#EBEBEB"));
+    painter.setBrush(backgroundColorForCell(cell));
     painter.drawRect(rect);
 
     if (!cell)
@@ -947,6 +989,7 @@ void BoardWidget::drawCell(
 
     const int stripSize = 12;
     const int priceSize = 28;
+    const int sidePriceSize = 18;
 
     QRect groupRect;
     QRect priceRect;
@@ -1087,23 +1130,28 @@ void BoardWidget::drawCell(
 
     if (isBusiness)
     {
-        painter.setPen(Qt::white);
-        painter.setFont(QFont("Segoe UI", 8, QFont::Bold));
-
         const QString moneyText =
             cell->ownerId == 0
                 ? QString("$%1").arg(cell->price)
-                : QString("Rent $%1").arg(cell->rent);
+                : QString("$%1").arg(cell->rent);
 
-        if (side == BoardCellSide::Left || side == BoardCellSide::Right)
+        const bool isSideCell =
+            side == BoardCellSide::Left ||
+            side == BoardCellSide::Right;
+
+        QFont priceFont("Segoe UI", isSideCell ? 9 : 8, QFont::Black);
+        priceFont.setHintingPreference(QFont::PreferFullHinting);
+
+        painter.setPen(Qt::white);
+        painter.setFont(priceFont);
+
+        if (isSideCell)
         {
             painter.save();
-            painter.translate(priceRect.center());
 
-            if (side == BoardCellSide::Right)
-                painter.rotate(90);
-            else
-                painter.rotate(-90);
+            painter.setRenderHint(QPainter::TextAntialiasing, true);
+            painter.translate(priceRect.center());
+            painter.rotate(side == BoardCellSide::Right ? 90 : -90);
 
             QRect rotatedRect(
                 -priceRect.height() / 2,
@@ -1112,7 +1160,11 @@ void BoardWidget::drawCell(
                 priceRect.width()
                 );
 
-            painter.drawText(rotatedRect, Qt::AlignCenter, moneyText);
+            painter.drawText(
+                rotatedRect.adjusted(1, 0, -1, 0),
+                Qt::AlignCenter,
+                moneyText
+                );
 
             painter.restore();
         }

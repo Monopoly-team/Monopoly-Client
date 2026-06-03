@@ -130,7 +130,7 @@ QString defaultPlayerColor(int index)
         QStringLiteral("#E53935"),
         QStringLiteral("#1E88E5"),
         QStringLiteral("#43A047"),
-        QStringLiteral("#FDD835"),
+        QStringLiteral("#42F5F2"),
         QStringLiteral("#8E24AA"),
         QStringLiteral("#FB8C00")
     };

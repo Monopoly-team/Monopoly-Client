@@ -78,6 +78,9 @@ private:
     QColor displayColorForPlayer(const ClientGamePlayer& player) const;
     QString iconForEventText(const QString& text) const;
 
+    QColor ownerColorForCell(const ClientBoardCell& cell) const;
+    QColor backgroundColorForCell(const ClientBoardCell* cell) const;
+
     void appendChatLine(const ClientGamePlayer& player, const QString& text);
     void appendPlayerEventLine(const ClientGamePlayer& player, const QString& text);
     void appendTurnEventLine(const QString& eventText, const ClientGamePlayer& player, const QString& nickname);
