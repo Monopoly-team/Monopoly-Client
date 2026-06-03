@@ -685,6 +685,25 @@ void TcpServerController::handlePlayerAction(QTcpSocket* senderSocket, const QJs
     const QJsonObject payload = message["payload"].toObject();
     const QString action = payload["action"].toString();
 
+    if (auctionActive_
+        && action != "auction_bid"
+        && action != "start_auction")
+    {
+        QJsonObject eventPayload;
+        eventPayload["text"] = "Сейчас идут торги. Другие действия временно недоступны.";
+
+        sendToClient(
+            senderSocket,
+            NetworkMessage::create(
+                "game_event",
+                SERVER_ID,
+                eventPayload
+                )
+            );
+
+        return;
+    }
+
     if (action == "start_auction")
     {
         startAuction();

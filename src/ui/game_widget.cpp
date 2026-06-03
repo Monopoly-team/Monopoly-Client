@@ -37,10 +37,17 @@ void GameWidget::updateGameState(const ClientGameState& state)
     centerGameWidget_->setCells(state.cells);
 
     const bool isMyTurn = state.currentPlayerId == localPlayerId_;
-    leftPanelWidget_->setRollEnabled(isMyTurn);
+    leftPanelWidget_->setRollEnabled(isMyTurn && !auctionActive_);
 }
 
 void GameWidget::setLocalPlayerId(quint16 playerId)
 {
     localPlayerId_ = playerId;
+}
+
+void GameWidget::setAuctionActive(bool active)
+{
+    auctionActive_ = active;
+
+    leftPanelWidget_->setRollEnabled(!auctionActive_);
 }

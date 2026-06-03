@@ -45,7 +45,13 @@ AuctionDialog::AuctionDialog(QWidget* parent)
     rootLayout->addWidget(bidButton_);
 
     connect(bidButton_, &QPushButton::clicked, this, [this]() {
-        emit bidRequested(bidEdit_->text().toInt());
+        const int amount = bidEdit_->text().toInt();
+
+        if (amount <= 0)
+            return;
+
+        emit bidRequested(amount);
+        bidEdit_->clear();
     });
 }
 

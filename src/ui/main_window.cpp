@@ -317,6 +317,8 @@ void MainWindow::showAuctionUpdate(
     auctionDialog_->show();
     auctionDialog_->raise();
     auctionDialog_->activateWindow();
+
+    gameWidget_->setAuctionActive(true);
 }
 
 void MainWindow::closeAuctionDialog()
