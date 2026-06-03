@@ -276,6 +276,7 @@ bool GameController::handleRollDiceAction(Player& player, const QJsonObject& pay
         }
 
         hasRolledThisTurn_ = true;
+        finishTurn();
         return true;
     }
 
