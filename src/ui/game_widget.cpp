@@ -35,4 +35,12 @@ void GameWidget::updateGameState(const ClientGameState& state)
 
     centerGameWidget_->setPlayers(state.players);
     centerGameWidget_->setCells(state.cells);
+
+    const bool isMyTurn = state.currentPlayerId == localPlayerId_;
+    leftPanelWidget_->setRollEnabled(isMyTurn);
+}
+
+void GameWidget::setLocalPlayerId(quint16 playerId)
+{
+    localPlayerId_ = playerId;
 }

@@ -14,7 +14,7 @@ public:
     ~DiceWidget() override;
 
     void setDiceValues(int first, int second);
-
+    void setRollEnabled(bool enabled);
 signals:
     void rollRequested();
 

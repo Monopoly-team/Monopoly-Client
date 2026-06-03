@@ -198,6 +198,8 @@ void MainWindow::showLobby()
 }
 void MainWindow::showGame()
 {
+    gameWidget_->setLocalPlayerId(clientController_->playerId());
+
     screens_->setCurrentWidget(gameWidget_);
 }
 
@@ -321,6 +323,9 @@ void MainWindow::closeAuctionDialog()
 {
     if (auctionDialog_)
         auctionDialog_->hide();
+
+    if (purchaseOfferDialog_)
+        purchaseOfferDialog_->hide();
 }
 
 void MainWindow::sendBuyBusinessAction()

@@ -87,3 +87,8 @@ void DiceWidget::setDiceValues(int first, int second)
 
 
 }
+
+void DiceWidget::setRollEnabled(bool enabled)
+{
+    setEnabled(enabled);
+}

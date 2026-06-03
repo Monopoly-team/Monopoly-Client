@@ -23,11 +23,13 @@ public:
     void addEvent(const QString& event);
     void updatePlayers(const QVector<ClientGamePlayer>& players);
     void updateGameState(const ClientGameState& state);
+    void setLocalPlayerId(quint16 playerId);
 private:
     LeftPanelWidget* leftPanelWidget_;
     CenterGameWidget* centerGameWidget_;
 
     QHBoxLayout* rootLayout_;
+    quint16      localPlayerId_ = 0;
 };
 
 

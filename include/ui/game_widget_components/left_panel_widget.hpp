@@ -19,6 +19,7 @@ public:
 
     void updatePlayers(const QVector<ClientGamePlayer>& players);
     void setDiceValues(int first, int second);
+    void setRollEnabled(bool enabled);
 
 private:
     QVBoxLayout*        rootLayout_;

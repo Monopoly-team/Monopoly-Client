@@ -26,3 +26,8 @@ void LeftPanelWidget::setDiceValues(int first, int second)
 {
     diceWidget_->setDiceValues(first, second);
 }
+
+void LeftPanelWidget::setRollEnabled(bool enabled)
+{
+    diceWidget_->setRollEnabled(enabled);
+}
