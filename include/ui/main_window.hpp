@@ -38,6 +38,8 @@ private slots:
     void openSettings();
     void updateSettingsButtonGeometry();
     void sendRollDiceAction();
+    void sendBuyBusinessAction();
+    void sendEndTurnAction();
 protected:
     void resizeEvent(QResizeEvent* event) override;
 public:

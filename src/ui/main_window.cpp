@@ -63,6 +63,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(clientController_, &TcpClientController::countdownCancelled,        lobbyWidget_, &LobbyWidget::cancelCountdown);
     connect(gameWidget_,       &GameWidget::messageSent,                        this, &MainWindow::sendChatMessage);
     connect(gameWidget_,       &GameWidget::rollDiceRequested,                  this, &MainWindow::sendRollDiceAction);
+    connect(gameWidget_,       &GameWidget::buyBusinessRequested,               this, &MainWindow::sendBuyBusinessAction);
+    connect(gameWidget_,       &GameWidget::endTurnRequested,                   this, &MainWindow::sendEndTurnAction);
     connect(clientController_, &TcpClientController::chatMessageReceived,       this, &MainWindow::showChatMessage);
     connect(clientController_, &TcpClientController::gameEventReceived,         this, &MainWindow::showGameEvent);
     connect(clientController_, &TcpClientController::gameStateUpdated,          gameWidget_, &GameWidget::updateGameState);
@@ -256,6 +258,34 @@ void MainWindow::sendRollDiceAction()
 {
     QJsonObject payload;
     payload["action"] = "roll_dice";
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "player_action",
+            clientController_->playerId(),
+            payload
+            )
+        );
+}
+
+void MainWindow::sendBuyBusinessAction()
+{
+    QJsonObject payload;
+    payload["action"] = "buy_business";
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "player_action",
+            clientController_->playerId(),
+            payload
+            )
+        );
+}
+
+void MainWindow::sendEndTurnAction()
+{
+    QJsonObject payload;
+    payload["action"] = "end_turn";
 
     clientController_->sendMessage(
         NetworkMessage::create(
