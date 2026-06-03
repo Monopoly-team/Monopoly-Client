@@ -15,6 +15,7 @@ public:
 
     void addEvent(const QString &event);
     void setPlayers(const QVector<ClientGamePlayer>& players);
+    void setCells(const QVector<ClientBoardCell>& cells);
 private:
     BoardWidget* boardWidget_;
 

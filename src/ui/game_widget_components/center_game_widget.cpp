@@ -22,3 +22,8 @@ void CenterGameWidget::setPlayers(const QVector<ClientGamePlayer>& players)
 {
     boardWidget_->setPlayers(players);
 }
+
+void CenterGameWidget::setCells(const QVector<ClientBoardCell>& cells)
+{
+    boardWidget_->setCells(cells);
+}

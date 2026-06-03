@@ -58,10 +58,71 @@ void BoardWidget::clearEvents()
 {
     eventsView_->clear();
 }
+namespace
+{
+QString imagePathForCell(quint8 id)
+{
+    switch (id)
+    {
+    case 0:  return ":/resources/img/start.svg";
+    case 10: return ":/resources/img/jail.svg";
+    case 20: return ":/resources/img/parking.svg";
+    case 30: return ":/resources/img/policeman.svg";
 
+    case 1:  return ":/resources/img/aprel.svg";
+    case 2:  return ":/resources/img/eapteka.png";
+    case 3:  return ":/resources/img/rigla.png";
+
+    case 5:  return ":/resources/img/it_top_eng.svg";
+
+    case 7:  return ":/resources/img/secondhand.svg";
+    case 8:  return ":/resources/img/lamoda.svg";
+    case 9:  return ":/resources/img/hm.png";
+
+    case 11: return ":/resources/img/diksi.svg";
+    case 12: return ":/resources/img/magnit.svg";
+    case 13: return ":/resources/img/5erochka.svg";
+
+    case 15: return ":/resources/img/it_top_sch.svg";
+
+    case 17: return ":/resources/img/vkusvill.svg";
+    case 18: return ":/resources/img/lavka.svg";
+    case 19: return ":/resources/img/samokat.svg";
+
+    case 21: return ":/resources/img/ozon.svg";
+    case 22: return ":/resources/img/yamarket.svg";
+    case 23: return ":/resources/img/wb.svg";
+
+    case 25: return ":/resources/img/it_top_uni.svg";
+
+    case 27: return ":/resources/img/ozonbank.svg";
+    case 28: return ":/resources/img/alfa.svg";
+    case 29: return ":/resources/img/sber.svg";
+
+    case 31: return ":/resources/img/cd.svg";
+    case 32: return ":/resources/img/rockstar.svg";
+    case 33: return ":/resources/img/valve.svg";
+
+    case 35: return ":/resources/img/it_top_col.svg";
+
+    case 37: return ":/resources/img/nvidia.svg";
+    case 38: return ":/resources/img/openai.svg";
+    case 39: return ":/resources/img/microsoft.svg";
+
+    default:
+        return {};
+    }
+}
+}
 void BoardWidget::setCells(const QVector<ClientBoardCell>& cells)
 {
     cells_ = cells;
+
+    for (ClientBoardCell& cell : cells_)
+    {
+        cell.imagePath = imagePathForCell(cell.id);
+    }
+
     update();
 }
 

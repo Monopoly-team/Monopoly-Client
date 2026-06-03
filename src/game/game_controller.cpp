@@ -220,7 +220,7 @@ bool GameController::handleRollDiceAction(Player& player, const QJsonObject& pay
 
     if (player.isInJail) {
         player.roundsInJail -= 1;
-        session_.state().setLastDiceValue(0);
+        session_.state().setLastDiceValues(1, 1);
 
         if (player.roundsInJail <= 0) {
             player.roundsInJail = 0;
@@ -268,7 +268,7 @@ bool GameController::handleRollDiceAction(Player& player, const QJsonObject& pay
                 .arg(steps));
     }
 
-    session_.state().setLastDiceValue(steps);
+    session_.state().setLastDiceValues(dice1, dice2);
 
     movePlayer(player, steps);
 

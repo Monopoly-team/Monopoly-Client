@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(gameWidget_,       &GameWidget::rollDiceRequested,                  this, &MainWindow::sendRollDiceAction);
     connect(clientController_, &TcpClientController::chatMessageReceived,       this, &MainWindow::showChatMessage);
     connect(clientController_, &TcpClientController::gameEventReceived,         this, &MainWindow::showGameEvent);
-    connect(clientController_, &TcpClientController::gamePlayersUpdated,        gameWidget_, &GameWidget::updatePlayers);
+    connect(clientController_, &TcpClientController::gameStateUpdated,          gameWidget_, &GameWidget::updateGameState);
     connect(clientController_, &TcpClientController::errorOccurred,             this, &MainWindow::showNetworkError);
     connect(clientController_, &TcpClientController::disconnectedFromServer,    this, &MainWindow::handleServerDisconnected);
 }

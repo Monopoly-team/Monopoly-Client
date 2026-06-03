@@ -22,6 +22,7 @@ public:
 
     void addEvent(const QString& event);
     void updatePlayers(const QVector<ClientGamePlayer>& players);
+    void updateGameState(const ClientGameState& state);
 private:
     LeftPanelWidget* leftPanelWidget_;
     CenterGameWidget* centerGameWidget_;

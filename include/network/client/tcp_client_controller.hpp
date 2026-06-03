@@ -5,6 +5,9 @@
 #include <QJsonObject>
 #include <QVector>
 
+#include "game/models/client_board_cell.hpp"
+
+
 struct ClientLobbyPlayer
 {
     QString     nickname;
@@ -19,6 +22,24 @@ struct ClientGamePlayer
     qint32  balance     = 0;
     quint8  position    = 0;
     QString color;
+    bool    isBankrupt      = false;
+    bool    active          = true;
+    bool    isInJail        = false;
+    bool    isCurrentTurn   = false;
+    int     ownedPropertiesCount = 0;
+};
+struct ClientGameState
+{
+    QString status;
+    quint16 currentPlayerId = 0;
+    int lastDiceValue = 0;
+    int lastDiceFirst = 1;
+    int lastDiceSecond = 1;
+    bool isGameOver = false;
+    quint16 winnerId = 0;
+
+    QVector<ClientGamePlayer> players;
+    QVector<ClientBoardCell> cells;
 };
 
 class TcpClientController : public QObject
@@ -37,6 +58,7 @@ signals:
     void gameEventReceived(const QString& text);
     void gamePlayersUpdated(const QVector<ClientGamePlayer>& players);
     void serverDisconnectRequested(const QString& reason);
+    void gameStateUpdated(const ClientGameState& state);
 private slots:
     void onConnected();
     void onDisconnected();
@@ -65,6 +87,8 @@ private:
 private:
     QTcpSocket* socket_;
     quint16     playerId_ = 0;
+    int lastDiceFirst = 1;
+    int lastDiceSecond = 1;
 
 };
 // TODO: Добавить обработку ready_changed и lobby_update на клиенте.

@@ -4,6 +4,66 @@
 #include <QDebug>
 #include <QJsonArray>
 
+
+namespace {
+
+CellType cellTypeFromString(const QString& value)
+{
+    const QString type = value.trimmed().toLower();
+
+    if (type == "corner")
+        return CellType::Corner;
+
+    if (type == "extra_business")
+        return CellType::ExtraBusiness;
+
+    if (type == "chance")
+        return CellType::Chance;
+
+    if (type == "community_chest")
+        return CellType::CommunityChest;
+
+    return CellType::Business;
+}
+
+BusinessGroup businessGroupFromString(const QString& value)
+{
+    QString group = value.trimmed().toLower();
+    group.replace("_", "");
+
+    if (group == "pharmacy")
+        return BusinessGroup::Pharmacy;
+
+    if (group == "clothes")
+        return BusinessGroup::Clothes;
+
+    if (group == "foodmarket")
+        return BusinessGroup::FoodMarket;
+
+    if (group == "darkstore")
+        return BusinessGroup::DarkStore;
+
+    if (group == "marketplace")
+        return BusinessGroup::Marketplace;
+
+    if (group == "bank")
+        return BusinessGroup::Bank;
+
+    if (group == "gamestudio")
+        return BusinessGroup::GameStudio;
+
+    if (group == "it")
+        return BusinessGroup::IT;
+
+    if (group == "iteducation")
+        return BusinessGroup::ITEducation;
+
+    return BusinessGroup::None;
+}
+
+}
+
+
 TcpClientController::TcpClientController(QObject *parent)
     : QObject(parent)
 {
@@ -175,9 +235,18 @@ void TcpClientController::handleGameEvent(const QJsonObject& message)
 
 void TcpClientController::handleGameState(const QJsonObject& message)
 {
-    QVector<ClientGamePlayer> players;
+    ClientGameState state;
 
     const QJsonObject payload = message["payload"].toObject();
+
+    state.status = payload["status"].toString();
+    state.currentPlayerId = static_cast<quint16>(payload["currentPlayerId"].toInt());
+    state.lastDiceValue = payload["lastDiceValue"].toInt();
+    state.lastDiceFirst = payload["lastDiceFirst"].toInt(1);
+    state.lastDiceSecond = payload["lastDiceSecond"].toInt(1);
+    state.isGameOver = payload["isGameOver"].toBool();
+    state.winnerId = static_cast<quint16>(payload["winnerId"].toInt());
+
     const QJsonArray playersArray = payload["players"].toArray();
 
     for (const QJsonValue& value : playersArray)
@@ -192,12 +261,42 @@ void TcpClientController::handleGameState(const QJsonObject& message)
         player.position = static_cast<quint8>(object["position"].toInt());
         player.color = object["color"].toString();
 
-        players.push_back(player);
+        player.isBankrupt = object["isBankrupt"].toBool();
+        player.active = object["active"].toBool(true);
+        player.isInJail = object["isInJail"].toBool();
+        player.isCurrentTurn = player.id == state.currentPlayerId;
+        player.ownedPropertiesCount = object["ownedProperties"].toArray().size();
+
+        state.players.push_back(player);
     }
 
-    qDebug() << "[Client] game_state players parsed:" << players.size();
+    const QJsonArray cellsArray = payload["cells"].toArray();
 
-    emit gamePlayersUpdated(players);
+    for (const QJsonValue& value : cellsArray)
+    {
+        const QJsonObject object = value.toObject();
+
+        ClientBoardCell cell;
+
+        cell.id = static_cast<quint8>(object["id"].toInt());
+        cell.name = object["name"].toString();
+        cell.type = cellTypeFromString(object["type"].toString());
+        cell.group = businessGroupFromString(object["group"].toString());
+        cell.price = object["price"].toInt();
+        cell.rent = object["rent"].toInt();
+        cell.ownerId = static_cast<quint16>(object["ownerId"].toInt());
+
+        state.cells.push_back(cell);
+    }
+
+    qDebug() << "[Client] game_state parsed:"
+             << "players =" << state.players.size()
+             << "cells =" << state.cells.size()
+             << "currentPlayerId =" << state.currentPlayerId
+             << "lastDiceValue =" << state.lastDiceValue;
+
+    emit gamePlayersUpdated(state.players);
+    emit gameStateUpdated(state);
 }
 
 void TcpClientController::handleError(const QJsonObject& message)

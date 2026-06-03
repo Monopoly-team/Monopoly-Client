@@ -18,6 +18,7 @@ public:
     ~LeftPanelWidget() override;
 
     void updatePlayers(const QVector<ClientGamePlayer>& players);
+    void setDiceValues(int first, int second);
 private:
     QVBoxLayout*        rootLayout_;
     PlayersListWidget*  playersList_;

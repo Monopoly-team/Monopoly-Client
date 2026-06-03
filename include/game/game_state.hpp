@@ -84,6 +84,11 @@ public:
     Cell* cellAt(int index);
     const Cell* cellAt(int index) const;
 
+    int lastDiceFirst() const;
+    int lastDiceSecond() const;
+
+    void setLastDiceValues(int first, int second);
+
 private:
     QString gameStatus_ = "waiting";
     int currentPlayerId_ = NO_OWNER_ID;
@@ -94,4 +99,7 @@ private:
 
     bool isGameOver_ = false;
     int winnerId_ = NO_WINNER_ID;
+
+    int lastDiceFirst_  = 1;
+    int lastDiceSecond_ = 1;
 };

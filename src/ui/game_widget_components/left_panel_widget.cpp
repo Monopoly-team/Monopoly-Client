@@ -21,3 +21,8 @@ void LeftPanelWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
 {
     playersList_->updatePlayers(players);
 }
+
+void LeftPanelWidget::setDiceValues(int first, int second)
+{
+    diceWidget_->setDiceValues(first, second);
+}

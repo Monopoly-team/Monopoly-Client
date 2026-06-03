@@ -321,6 +321,8 @@ QJsonObject GameState::toJson() const
     root["status"] = gameStatus_;
     root["currentPlayerId"] = currentPlayerId_;
     root["lastDiceValue"] = lastDiceValue_;
+    root["lastDiceFirst"] = lastDiceFirst_;
+    root["lastDiceSecond"] = lastDiceSecond_;
     root["isGameOver"] = isGameOver_;
     root["winnerId"] = winnerId_;
 
@@ -375,6 +377,8 @@ GameState GameState::fromJson(const QJsonObject& json)
     state.gameStatus_ = json.contains("status") ? json["status"].toString("waiting") : json["gameStatus"].toString("waiting");
     state.currentPlayerId_ = json["currentPlayerId"].toInt(NO_OWNER_ID);
     state.lastDiceValue_ = json["lastDiceValue"].toInt(0);
+    state.lastDiceFirst_ = json["lastDiceFirst"].toInt(1);
+    state.lastDiceSecond_ = json["lastDiceSecond"].toInt(1);
     state.isGameOver_ = json["isGameOver"].toBool(false);
     state.winnerId_ = json["winnerId"].toInt(NO_WINNER_ID);
 
@@ -597,4 +601,29 @@ const Cell* GameState::cellAt(int index) const
     }
 
     return &board_[index];
+}
+
+int GameState::lastDiceFirst() const
+{
+    return lastDiceFirst_;
+}
+
+int GameState::lastDiceSecond() const
+{
+    return lastDiceSecond_;
+}
+
+void GameState::setLastDiceValues(int first, int second)
+{
+    if (first < 1 || first > 6 || second < 1 || second > 6)
+    {
+        lastDiceFirst_ = 1;
+        lastDiceSecond_ = 1;
+        lastDiceValue_ = 0;
+        return;
+    }
+
+    lastDiceFirst_ = first;
+    lastDiceSecond_ = second;
+    lastDiceValue_ = first + second;
 }

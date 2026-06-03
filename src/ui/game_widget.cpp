@@ -29,3 +29,12 @@ void GameWidget::updatePlayers(const QVector<ClientGamePlayer>& players)
     leftPanelWidget_->updatePlayers(players);
     centerGameWidget_->setPlayers(players);
 }
+
+void GameWidget::updateGameState(const ClientGameState& state)
+{
+    leftPanelWidget_->updatePlayers(state.players);
+    leftPanelWidget_->setDiceValues(state.lastDiceFirst, state.lastDiceSecond);
+
+    centerGameWidget_->setPlayers(state.players);
+    centerGameWidget_->setCells(state.cells);
+}
