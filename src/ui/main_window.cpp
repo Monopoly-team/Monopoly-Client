@@ -63,8 +63,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(clientController_, &TcpClientController::countdownCancelled,        lobbyWidget_, &LobbyWidget::cancelCountdown);
     connect(gameWidget_,       &GameWidget::messageSent,                        this, &MainWindow::sendChatMessage);
     connect(gameWidget_,       &GameWidget::rollDiceRequested,                  this, &MainWindow::sendRollDiceAction);
-    connect(gameWidget_,       &GameWidget::buyBusinessRequested,               this, &MainWindow::sendBuyBusinessAction);
-    connect(gameWidget_,       &GameWidget::endTurnRequested,                   this, &MainWindow::sendEndTurnAction);
+    connect(clientController_, &TcpClientController::purchaseOfferReceived,     this, &MainWindow::showPurchaseOffer);
+    connect(clientController_, &TcpClientController::auctionUpdated,            this, &MainWindow::showAuctionUpdate);
+    connect(clientController_, &TcpClientController::auctionFinished,           this, &MainWindow::closeAuctionDialog);
     connect(clientController_, &TcpClientController::chatMessageReceived,       this, &MainWindow::showChatMessage);
     connect(clientController_, &TcpClientController::gameEventReceived,         this, &MainWindow::showGameEvent);
     connect(clientController_, &TcpClientController::gameStateUpdated,          gameWidget_, &GameWidget::updateGameState);
@@ -268,6 +269,60 @@ void MainWindow::sendRollDiceAction()
         );
 }
 
+void MainWindow::showPurchaseOffer(int cellId, const QString& cellName, int price)
+{
+    if (!purchaseOfferDialog_)
+    {
+        purchaseOfferDialog_ = new PurchaseOfferDialog(this);
+
+        connect(purchaseOfferDialog_, &PurchaseOfferDialog::buyRequested,
+                this, &MainWindow::sendBuyBusinessAction);
+
+        connect(purchaseOfferDialog_, &PurchaseOfferDialog::auctionRequested,
+                this, &MainWindow::sendStartAuctionAction);
+    }
+
+    purchaseOfferDialog_->setOffer(cellId, cellName, price);
+    purchaseOfferDialog_->show();
+    purchaseOfferDialog_->raise();
+    purchaseOfferDialog_->activateWindow();
+}
+
+void MainWindow::showAuctionUpdate(
+    int cellId,
+    const QString& cellName,
+    int secondsLeft,
+    int currentBid,
+    const QString& highestBidderName
+    )
+{
+    if (!auctionDialog_)
+    {
+        auctionDialog_ = new AuctionDialog(this);
+
+        connect(auctionDialog_, &AuctionDialog::bidRequested,
+                this, &MainWindow::sendAuctionBidAction);
+    }
+
+    auctionDialog_->updateAuction(
+        cellId,
+        cellName,
+        secondsLeft,
+        currentBid,
+        highestBidderName
+        );
+
+    auctionDialog_->show();
+    auctionDialog_->raise();
+    auctionDialog_->activateWindow();
+}
+
+void MainWindow::closeAuctionDialog()
+{
+    if (auctionDialog_)
+        auctionDialog_->hide();
+}
+
 void MainWindow::sendBuyBusinessAction()
 {
     QJsonObject payload;
@@ -282,10 +337,25 @@ void MainWindow::sendBuyBusinessAction()
         );
 }
 
-void MainWindow::sendEndTurnAction()
+void MainWindow::sendStartAuctionAction()
 {
     QJsonObject payload;
-    payload["action"] = "end_turn";
+    payload["action"] = "start_auction";
+
+    clientController_->sendMessage(
+        NetworkMessage::create(
+            "player_action",
+            clientController_->playerId(),
+            payload
+            )
+        );
+}
+
+void MainWindow::sendAuctionBidAction(int amount)
+{
+    QJsonObject payload;
+    payload["action"] = "auction_bid";
+    payload["amount"] = amount;
 
     clientController_->sendMessage(
         NetworkMessage::create(

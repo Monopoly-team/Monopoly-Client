@@ -6,7 +6,6 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QPushButton>
 
 class LeftPanelWidget : public QWidget
 {
@@ -14,8 +13,6 @@ class LeftPanelWidget : public QWidget
 
 signals:
     void rollDiceRequested();
-    void buyBusinessRequested();
-    void endTurnRequested();
 public:
     explicit LeftPanelWidget(QWidget* parent = nullptr);
     ~LeftPanelWidget() override;
@@ -27,6 +24,4 @@ private:
     QVBoxLayout*        rootLayout_;
     PlayersListWidget*  playersList_;
     DiceWidget*         diceWidget_;
-    QPushButton*        buyBusinessButton_;
-    QPushButton*        endTurnButton_;
 };

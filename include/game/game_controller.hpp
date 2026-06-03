@@ -23,6 +23,9 @@ public:
     QJsonObject gameStateToJson() const;
     QStringList takeEvents();
 
+    bool buyAuctionBusiness(int playerId, int cellId, int price);
+    void finishCurrentTurn();
+
     const GameState& gameState() const;
 
 signals:
@@ -68,9 +71,11 @@ private:
     QString playerName(const Player& player) const;
     void appendEvent(const QString& eventText);
 
+    bool shouldWaitForPurchaseDecision(const Player& player) const;
+
 private:
     GameSession session_;
     QStringList events_;
 
-    bool hasRolledThisTurn_ = false;
+    bool        hasRolledThisTurn_ = false;
 };

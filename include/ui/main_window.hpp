@@ -13,6 +13,8 @@
 #include "network/network_message.hpp"
 #include "services/audio_service.hpp"
 #include "ui/settings_dialog.hpp"
+#include "ui/purchase_offer_dialog.hpp"
+#include "ui/auction_dialog.hpp"
 
 class MainWindow : public QMainWindow
 {
@@ -38,8 +40,13 @@ private slots:
     void openSettings();
     void updateSettingsButtonGeometry();
     void sendRollDiceAction();
+    void showPurchaseOffer(int cellId, const QString& cellName, int price);
+    void showAuctionUpdate(int cellId, const QString& cellName, int secondsLeft, int currentBid, const QString& highestBidderName);
+    void closeAuctionDialog();
     void sendBuyBusinessAction();
-    void sendEndTurnAction();
+
+    void sendStartAuctionAction();
+    void sendAuctionBidAction(int amount);
 protected:
     void resizeEvent(QResizeEvent* event) override;
 public:
@@ -59,6 +66,8 @@ private:
 
     TcpClientController* clientController_;
     TcpServerController* serverController_ = nullptr;
+    PurchaseOfferDialog* purchaseOfferDialog_ = nullptr;
+    AuctionDialog*       auctionDialog_ = nullptr;
 
 };
 

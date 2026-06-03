@@ -25,6 +25,7 @@ private slots:
     void onReadyRead();
     void onCountdownTick();
     void onDisconnect();
+    void onAuctionTick();
 public:
     TcpServerController(QObject* parent = nullptr);
     ~TcpServerController() override;
@@ -63,6 +64,12 @@ private:
     void cancelCountdown();
     bool areAllPlayersReady() const;
 
+    void sendPurchaseOfferToCurrentPlayer();
+    void startAuction();
+    void handleAuctionBid(quint16 playerId, const QJsonObject& payload);
+    void finishAuction();
+    void broadcastAuctionUpdate();
+
     void shutdownGame(const QString& reason);
 
     QJsonObject gameStartedMessage();
@@ -78,7 +85,14 @@ private:
     bool                                gameStarted_            = false;
     GameController*                     gameController_;
 
+    QTimer*                             auctionTimer_ = nullptr;
 
+    bool                                auctionActive_ = false;
+    int                                 auctionSecondsLeft_ = 0;
+    int                                 auctionCellId_ = -1;
+    int                                 auctionCurrentBid_ = 0;
+    quint16                             auctionHighestBidderId_ = 0;
+    QString                             auctionHighestBidderName_;
 
 
 };

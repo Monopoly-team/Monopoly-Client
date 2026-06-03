@@ -1,6 +1,7 @@
 #include "network/server/tcp_server_controller.hpp"
 #include "network/network_message.hpp"
 #include "network_constants.hpp"
+#include "game/game_rules.hpp"
 
 #include <QTimer>
 #include <QHostAddress>
@@ -17,6 +18,10 @@ TcpServerController::TcpServerController(QObject *parent)
 
     connect(startCountdownTimer_, &QTimer::timeout, this, &TcpServerController::onCountdownTick);
     connect(server_, &QTcpServer::newConnection, this, &TcpServerController::onNewConnection);
+
+    auctionTimer_ = new QTimer(this);
+
+    connect(auctionTimer_, &QTimer::timeout, this, &TcpServerController::onAuctionTick);
 }
 
 TcpServerController::~TcpServerController() = default;
@@ -678,6 +683,19 @@ void TcpServerController::handlePlayerAction(QTcpSocket* senderSocket, const QJs
 
     const ServerPlayer& player = players_[senderSocket];
     const QJsonObject payload = message["payload"].toObject();
+    const QString action = payload["action"].toString();
+
+    if (action == "start_auction")
+    {
+        startAuction();
+        return;
+    }
+
+    if (action == "auction_bid")
+    {
+        handleAuctionBid(player.id, payload);
+        return;
+    }
 
     qDebug() << "[Server] player action from"
              << player.nickname
@@ -685,8 +703,10 @@ void TcpServerController::handlePlayerAction(QTcpSocket* senderSocket, const QJs
              << payload;
 
     gameController_->handlePlayerAction(player.id, payload);
-
     broadcastGameUpdate();
+
+    if (action == "roll_dice")
+        sendPurchaseOfferToCurrentPlayer();
 }
 
 
@@ -725,4 +745,167 @@ void TcpServerController::shutdownGame(const QString& reason)
         server_->close();
 
     qDebug() << "[Server] Game shutdown:" << reason;
+}
+
+void TcpServerController::sendPurchaseOfferToCurrentPlayer()
+{
+    const GameState& state = gameController_->gameState();
+
+    const Player* player = state.playerById(state.currentPlayerId());
+    if (!player)
+        return;
+
+    const Cell* cell = state.cellAt(player->position);
+    if (!cell)
+        return;
+
+    if (!GameRules::isBusinessCell(*cell))
+        return;
+
+    if (cell->ownerId != NO_OWNER_ID)
+        return;
+
+    QTcpSocket* targetSocket = nullptr;
+
+    for (auto it = players_.begin(); it != players_.end(); ++it)
+    {
+        if (it.value().id == player->id)
+        {
+            targetSocket = it.key();
+            break;
+        }
+    }
+
+    if (!targetSocket)
+        return;
+
+    QJsonObject payload;
+    payload["cellId"] = cell->id;
+    payload["cellName"] = cell->name;
+    payload["price"] = cell->price;
+
+    sendToClient(
+        targetSocket,
+        NetworkMessage::create("purchase_offer", SERVER_ID, payload)
+        );
+}
+
+void TcpServerController::startAuction()
+{
+    if (auctionActive_)
+        return;
+
+    const GameState& state = gameController_->gameState();
+
+    const Player* player = state.playerById(state.currentPlayerId());
+    if (!player)
+        return;
+
+    const Cell* cell = state.cellAt(player->position);
+    if (!cell)
+        return;
+
+    if (!GameRules::isBusinessCell(*cell) || cell->ownerId != NO_OWNER_ID)
+        return;
+
+    auctionActive_ = true;
+    auctionSecondsLeft_ = 30;
+    auctionCellId_ = cell->id;
+    auctionCurrentBid_ = 0;
+    auctionHighestBidderId_ = 0;
+    auctionHighestBidderName_.clear();
+
+    auctionTimer_->start(1000);
+    broadcastAuctionUpdate();
+}
+
+void TcpServerController::handleAuctionBid(quint16 playerId, const QJsonObject& payload)
+{
+    if (!auctionActive_)
+        return;
+
+    const int amount = payload["amount"].toInt(0);
+
+    if (amount <= auctionCurrentBid_)
+        return;
+
+    const GameState& state = gameController_->gameState();
+    const Player* player = state.playerById(playerId);
+
+    if (!player || player->isBankrupt || !player->active)
+        return;
+
+    if (player->balance < amount)
+        return;
+
+    auctionCurrentBid_ = amount;
+    auctionHighestBidderId_ = playerId;
+    auctionHighestBidderName_ = player->nickname;
+
+    broadcastAuctionUpdate();
+}
+
+void TcpServerController::onAuctionTick()
+{
+    if (!auctionActive_)
+        return;
+
+    auctionSecondsLeft_--;
+
+    if (auctionSecondsLeft_ <= 0)
+    {
+        finishAuction();
+        return;
+    }
+
+    broadcastAuctionUpdate();
+}
+
+void TcpServerController::broadcastAuctionUpdate()
+{
+    const GameState& state = gameController_->gameState();
+    const Cell* cell = state.cellAt(auctionCellId_);
+
+    if (!cell)
+        return;
+
+    QJsonObject payload;
+    payload["cellId"] = cell->id;
+    payload["cellName"] = cell->name;
+    payload["secondsLeft"] = auctionSecondsLeft_;
+    payload["currentBid"] = auctionCurrentBid_;
+    payload["highestBidderId"] = auctionHighestBidderId_;
+    payload["highestBidderName"] = auctionHighestBidderName_;
+
+    broadcastToPlayers(
+        NetworkMessage::create("auction_update", SERVER_ID, payload)
+        );
+}
+
+void TcpServerController::finishAuction()
+{
+    auctionTimer_->stop();
+
+    if (auctionHighestBidderId_ != 0 && auctionCurrentBid_ > 0)
+    {
+        gameController_->buyAuctionBusiness(
+            auctionHighestBidderId_,
+            auctionCellId_,
+            auctionCurrentBid_
+            );
+    }
+
+    auctionActive_ = false;
+    auctionSecondsLeft_ = 0;
+    auctionCellId_ = -1;
+    auctionCurrentBid_ = 0;
+    auctionHighestBidderId_ = 0;
+    auctionHighestBidderName_.clear();
+
+    broadcastToPlayers(
+        NetworkMessage::create("auction_finished", SERVER_ID, QJsonObject{})
+        );
+
+    gameController_->finishCurrentTurn();
+    broadcastGameUpdate();
 }

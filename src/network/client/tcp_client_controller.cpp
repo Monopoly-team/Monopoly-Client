@@ -169,6 +169,23 @@ void TcpClientController::handleMessage(const QJsonObject& message)
         handleError(message);
         return;
     }
+    if (type == "purchase_offer")
+    {
+        handlePurchaseOffer(message);
+        return;
+    }
+
+    if (type == "auction_update")
+    {
+        handleAuctionUpdate(message);
+        return;
+    }
+
+    if (type == "auction_finished")
+    {
+        handleAuctionFinished(message);
+        return;
+    }
     qDebug() << "[Client] Unhandled type: " << type;
 }
 void TcpClientController::handleServerDisconnect(const QJsonObject& message)
@@ -359,4 +376,32 @@ void TcpClientController::onErrorOccurred(QAbstractSocket::SocketError error)
     emit errorOccurred(socket_->errorString());
 }
 
+void TcpClientController::handlePurchaseOffer(const QJsonObject& message)
+{
+    const QJsonObject payload = message["payload"].toObject();
 
+    emit purchaseOfferReceived(
+        payload["cellId"].toInt(),
+        payload["cellName"].toString(),
+        payload["price"].toInt()
+        );
+}
+
+void TcpClientController::handleAuctionUpdate(const QJsonObject& message)
+{
+    const QJsonObject payload = message["payload"].toObject();
+
+    emit auctionUpdated(
+        payload["cellId"].toInt(),
+        payload["cellName"].toString(),
+        payload["secondsLeft"].toInt(),
+        payload["currentBid"].toInt(),
+        payload["highestBidderName"].toString()
+        );
+}
+
+void TcpClientController::handleAuctionFinished(const QJsonObject& message)
+{
+    Q_UNUSED(message);
+    emit auctionFinished();
+}

@@ -59,6 +59,9 @@ signals:
     void gamePlayersUpdated(const QVector<ClientGamePlayer>& players);
     void serverDisconnectRequested(const QString& reason);
     void gameStateUpdated(const ClientGameState& state);
+    void purchaseOfferReceived(int cellId, const QString& cellName, int price);
+    void auctionUpdated(int cellId, const QString& cellName, int secondsLeft, int currentBid, const QString& highestBidderName);
+    void auctionFinished();
 private slots:
     void onConnected();
     void onDisconnected();
@@ -84,6 +87,9 @@ private:
     void handleGameEvent(const QJsonObject& message);
     void handleGameState(const QJsonObject& message);
     void handleError(const QJsonObject& message);
+    void handlePurchaseOffer(const QJsonObject& message);
+    void handleAuctionUpdate(const QJsonObject& message);
+    void handleAuctionFinished(const QJsonObject& message);
 private:
     QTcpSocket* socket_;
     quint16     playerId_ = 0;

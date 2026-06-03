@@ -14,8 +14,6 @@ class GameWidget : public QWidget
 signals:
     void messageSent(const QString& message);
     void rollDiceRequested();
-    void buyBusinessRequested();
-    void endTurnRequested();
 private slots:
 
 public:

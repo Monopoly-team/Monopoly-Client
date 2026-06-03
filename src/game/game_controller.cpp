@@ -195,6 +195,50 @@ QStringList GameController::takeEvents()
     return result;
 }
 
+bool GameController::buyAuctionBusiness(int playerId, int cellId, int price)
+{
+    GameState& state = session_.state();
+
+    Player* player = state.playerById(playerId);
+    Cell* cell = state.cellAt(cellId);
+
+    if (!player || !cell)
+        return false;
+
+    if (!GameRules::isBusinessCell(*cell))
+        return false;
+
+    if (cell->ownerId != NO_OWNER_ID)
+        return false;
+
+    if (price <= 0 || player->balance < price)
+        return false;
+
+    player->balance -= price;
+    cell->ownerId = player->id;
+
+    if (!player->ownedProperties.contains(cell->id))
+        player->ownedProperties.append(cell->id);
+
+    appendEvent(
+        QStringLiteral("%1 выиграл торги и купил \"%2\" за %3.")
+            .arg(playerName(*player))
+            .arg(cell->name)
+            .arg(price)
+        );
+
+    updateGameOver();
+    emit stateChanged();
+
+    return true;
+}
+
+void GameController::finishCurrentTurn()
+{
+    finishTurn();
+    emit stateChanged();
+}
+
 const GameState& GameController::gameState() const
 {
     return session_.state();
@@ -270,15 +314,21 @@ bool GameController::handleRollDiceAction(Player& player, const QJsonObject& pay
 
     session_.state().setLastDiceValues(dice1, dice2);
 
+    hasRolledThisTurn_ = true;
+
     movePlayer(player, steps);
 
     if (Cell* cell = session_.state().cellAt(player.position)) {
         handleLandingCell(player, *cell);
     }
+    if (session_.state().currentPlayerId() == player.id
+        && !shouldWaitForPurchaseDecision(player)
+        && !player.isBankrupt)
+    {
+        finishTurn();
+    }
 
-    hasRolledThisTurn_ = true;
-
-    if (player.isBankrupt) {
+    if (session_.state().currentPlayerId() == player.id && player.isBankrupt) {
         finishTurn();
     }
 
@@ -577,7 +627,7 @@ void GameController::handleBusinessCell(Player& player, Cell& cell)
             QStringLiteral("%1 попал на свой бизнес \"%2\".")
                 .arg(playerName(player))
                 .arg(cell.name));
-
+        finishTurn();
         return;
     }
 
@@ -593,6 +643,7 @@ void GameController::handleBusinessCell(Player& player, Cell& cell)
     }
 
     payRent(player, *owner, cell);
+    finishTurn();
 }
 
 bool GameController::buyBusiness(Player& player, Cell& cell)
@@ -633,6 +684,8 @@ bool GameController::buyBusiness(Player& player, Cell& cell)
             .arg(playerName(player))
             .arg(cell.name)
             .arg(cell.price));
+
+    finishTurn();
 
     return true;
 }
@@ -843,6 +896,10 @@ void GameController::sendPlayerToJail(Player& player)
     player.roundsInJail = 1;
 
     appendEvent(QStringLiteral("%1 отправлен в тюрьму.").arg(playerName(player)));
+
+    if (session_.state().currentPlayerId() == player.id) {
+        finishTurn();
+    }
 }
 
 bool GameController::isCurrentPlayersTurn(int playerId) const
@@ -958,4 +1015,19 @@ void GameController::appendEvent(const QString& eventText)
     if (!eventText.trimmed().isEmpty()) {
         events_.append(eventText);
     }
+}
+
+bool GameController::shouldWaitForPurchaseDecision(const Player& player) const
+{
+    const Cell* cell = session_.state().cellAt(player.position);
+
+    if (cell == nullptr) {
+        return false;
+    }
+
+    if (!GameRules::isBusinessCell(*cell)) {
+        return false;
+    }
+
+    return cell->ownerId == NO_OWNER_ID;
 }

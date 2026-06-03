@@ -13,8 +13,6 @@ GameWidget::GameWidget(QWidget *parent)
 
     connect(centerGameWidget_, &CenterGameWidget::messageSent,      this, &GameWidget::messageSent);
     connect(leftPanelWidget_,  &LeftPanelWidget::rollDiceRequested, this, &GameWidget::rollDiceRequested);
-    connect(leftPanelWidget_, &LeftPanelWidget::buyBusinessRequested, this, &GameWidget::buyBusinessRequested);
-    connect(leftPanelWidget_, &LeftPanelWidget::endTurnRequested, this, &GameWidget::endTurnRequested);
 }
 
 GameWidget::~GameWidget() = default;

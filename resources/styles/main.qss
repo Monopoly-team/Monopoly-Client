@@ -397,3 +397,106 @@ QMessageBox QLabel#qt_msgbox_label
     background: #6C7BFF;
     border-radius: 4px;
 }
+
+#purchaseOfferDialog,
+#auctionDialog
+{
+    background-color: #1B1F36;
+    border: 1px solid rgba(255,255,255,0.10);
+}
+
+#purchaseTitle,
+#auctionTitle
+{
+    color: white;
+    background: transparent;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+#purchasePrice,
+#auctionTimer,
+#auctionBidLabel
+{
+    color: rgba(255,255,255,0.88);
+    background: transparent;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+#auctionTimer
+{
+    color: #FFD166;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+#auctionBidInput
+{
+    background-color: rgba(0,0,0,0.26);
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 12px;
+
+    padding: 10px 14px;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    min-height: 42px;
+}
+
+#auctionBidInput:focus
+{
+    border: 1px solid #7B8CFF;
+    background-color: rgba(255,255,255,0.06);
+}
+
+#primaryDialogButton
+{
+    background-color: #6C7BFF;
+    color: white;
+
+    border: none;
+    border-radius: 14px;
+
+    min-height: 46px;
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+#primaryDialogButton:hover
+{
+    background-color: #7D8AFF;
+}
+
+#primaryDialogButton:pressed
+{
+    background-color: #5661DD;
+}
+
+#secondaryDialogButton
+{
+    background-color: rgba(255,255,255,0.08);
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+
+    min-height: 46px;
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+#secondaryDialogButton:hover
+{
+    background-color: rgba(255,255,255,0.14);
+}
+
+#secondaryDialogButton:pressed
+{
+    background-color: rgba(255,255,255,0.22);
+}
