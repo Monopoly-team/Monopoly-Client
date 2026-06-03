@@ -46,5 +46,6 @@
         <file>resources/audio/join_sound.wav</file>
         <file>resources/audio/dice_sound.wav</file>
         <file>resources/audio/game_start.wav</file>
+        <file>resources/img/game.ico</file>
     </qresource>
 </RCC>

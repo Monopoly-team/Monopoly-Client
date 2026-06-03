@@ -14,7 +14,13 @@ int main(int argc, char *argv[])
         "qt.multimedia.ffmpeg=false"
         );
 
+
+
     QApplication a(argc, argv);
+
+    a.setWindowIcon(
+        QIcon(":/resources/img/game.ico")
+        );
 
     if(styleFile.open(QFile::ReadOnly))
         a.setStyleSheet(styleFile.readAll());
