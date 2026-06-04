@@ -41,7 +41,14 @@ private slots:
     void updateSettingsButtonGeometry();
     void sendRollDiceAction();
     void showPurchaseOffer(int cellId, const QString& cellName, int price);
-    void showAuctionUpdate(int cellId, const QString& cellName, int secondsLeft, int currentBid, const QString& highestBidderName);
+    void showAuctionUpdate(
+        int cellId,
+        const QString& cellName,
+        int secondsLeft,
+        int currentBid,
+        int minimumBid,
+        const QString& highestBidderName
+        );
     void closeAuctionDialog();
     void sendBuyBusinessAction();
     void updateLocalPlayerState(const ClientGameState& state);

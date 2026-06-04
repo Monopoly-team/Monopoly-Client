@@ -298,6 +298,7 @@ void MainWindow::showAuctionUpdate(
     const QString& cellName,
     int secondsLeft,
     int currentBid,
+    int minimumBid,
     const QString& highestBidderName
     )
 {
@@ -316,6 +317,7 @@ void MainWindow::showAuctionUpdate(
         cellName,
         secondsLeft,
         currentBid,
+        minimumBid,
         highestBidderName
         );
 

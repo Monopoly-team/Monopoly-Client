@@ -828,8 +828,9 @@ void TcpServerController::startAuction()
         return;
 
     auctionActive_ = true;
-    auctionSecondsLeft_ = 30;
+    auctionSecondsLeft_ = 15;
     auctionCellId_ = cell->id;
+    auctionMinimumBid_ = cell->price;
     auctionCurrentBid_ = 0;
     auctionHighestBidderId_ = 0;
     auctionHighestBidderName_.clear();
@@ -846,7 +847,12 @@ void TcpServerController::handleAuctionBid(quint16 playerId, const QJsonObject& 
 
     const int amount = payload["amount"].toInt(0);
 
-    if (amount <= auctionCurrentBid_)
+    const int minimumAllowedBid =
+        auctionHighestBidderId_ == 0
+            ? auctionMinimumBid_
+            : auctionCurrentBid_ + 1;
+
+    if (amount < minimumAllowedBid)
         return;
 
     const GameState& state = gameController_->gameState();
@@ -861,7 +867,8 @@ void TcpServerController::handleAuctionBid(quint16 playerId, const QJsonObject& 
     auctionCurrentBid_ = amount;
     auctionHighestBidderId_ = playerId;
     auctionHighestBidderName_ = player->nickname;
-
+    if (auctionSecondsLeft_ < 5)
+        auctionSecondsLeft_ = 5;
     broadcastAuctionUpdate();
 }
 
@@ -890,11 +897,16 @@ void TcpServerController::broadcastAuctionUpdate()
         return;
 
     QJsonObject payload;
-    payload["cellId"] = cell->id;
-    payload["cellName"] = cell->name;
-    payload["secondsLeft"] = auctionSecondsLeft_;
-    payload["currentBid"] = auctionCurrentBid_;
-    payload["highestBidderId"] = auctionHighestBidderId_;
+
+    payload["cellId"]            = cell->id;
+    payload["cellName"]          = cell->name;
+    payload["secondsLeft"]       = auctionSecondsLeft_;
+    payload["currentBid"]        = auctionCurrentBid_;
+    payload["minimumBid"] =
+        auctionHighestBidderId_ == 0
+            ? auctionMinimumBid_
+            : auctionCurrentBid_ + 1;
+    payload["highestBidderId"]   = auctionHighestBidderId_;
     payload["highestBidderName"] = auctionHighestBidderName_;
 
     broadcastToPlayers(
@@ -925,6 +937,7 @@ void TcpServerController::finishAuction()
     auctionSecondsLeft_ = 0;
     auctionCellId_ = -1;
     auctionCurrentBid_ = 0;
+    auctionMinimumBid_ = 0;
     auctionHighestBidderId_ = 0;
     auctionHighestBidderName_.clear();
     auctionOwnerTurnPlayerId_ = 0;

@@ -154,14 +154,48 @@ int clampBuildingLevel(int value, int maxBuildingLevel)
 
     return value;
 }
+int scaledValue(int value, int numerator, int denominator)
+{
+    if (denominator == 0) {
+        return value;
+    }
+
+    return (value * numerator + denominator / 2) / denominator;
+}
+
+int baseRentForPrice(int price)
+{
+    return qMax(1, scaledValue(price, 1, 10));
+}
+
+QVector<int> rentLevelsForPrice(int price)
+{
+    const int baseRent = baseRentForPrice(price);
+
+    return {
+        baseRent,                         // 0 домов: 10% от цены
+        scaledValue(baseRent, 3, 2),      // 1 дом: x1.5
+        baseRent * 2,                     // 2 дома: x2
+        baseRent * 3,                     // 3 дома: x3
+        baseRent * 5,                     // 4 дома: x5
+        baseRent * 10                     // отель: x10
+    };
+}
 
 Cell createSpecialCell(int id, const QString& name, CellType type)
 {
     Cell cell;
+
     cell.id = id;
     cell.name = name;
     cell.type = type;
     cell.group = BusinessGroup::None;
+    cell.price = 0;
+    cell.rentLevels.clear();
+    cell.mortgageValue = 0;
+    cell.buildingCost = 0;
+    cell.buildingLevel = 0;
+    cell.maxBuildingLevel = 0;
     cell.ownerId = NO_OWNER_ID;
 
     return cell;
@@ -192,74 +226,129 @@ Cell createBusinessCell(
 
     return cell;
 }
-
+Cell createRegularBusinessCell(
+    int id,
+    const QString& name,
+    BusinessGroup group,
+    int price)
+{
+    return createBusinessCell(
+        id,
+        name,
+        group,
+        price,
+        rentLevelsForPrice(price),
+        price / 2,
+        price / 2
+        );
+}
 QVector<Cell> buildBoard()
 {
     QVector<Cell> board(BOARD_SIZE);
 
     board[0] = createSpecialCell(0, "START", CellType::Corner);
 
-    board[1] = createBusinessCell(1, "Апрель", BusinessGroup::Pharmacy, 100, {10, 50, 150, 450, 625, 750}, 50, 50);
-    board[2] = createBusinessCell(2, "ЕАптека", BusinessGroup::Pharmacy, 120, {12, 60, 180, 500, 700, 900}, 60, 50);
-    board[3] = createBusinessCell(3, "Ригла", BusinessGroup::Pharmacy, 140, {14, 70, 200, 550, 750, 950}, 70, 50);
+    board[1] = createRegularBusinessCell(1, "Апрель", BusinessGroup::Pharmacy, 1000);
+    board[2] = createRegularBusinessCell(2, "ЕАптека", BusinessGroup::Pharmacy, 1200);
+    board[3] = createRegularBusinessCell(3, "Ригла", BusinessGroup::Pharmacy, 1400);
 
     board[4] = createSpecialCell(4, "Chance", CellType::Chance);
 
-    board[5] = createBusinessCell(5, "IT Top English", BusinessGroup::ITEducation, 200, {25, 50, 100, 200}, 100, 0, CellType::ExtraBusiness, 0);
+    board[5] = createBusinessCell(
+        5,
+        "IT Top English",
+        BusinessGroup::ITEducation,
+        2000,
+        {500, 1000, 2000, 4000},
+        100,
+        0,
+        CellType::ExtraBusiness,
+        0
+        );
 
     board[6] = createSpecialCell(6, "Community Chest", CellType::CommunityChest);
 
-    board[7] = createBusinessCell(7, "Second Hand", BusinessGroup::Clothes, 160, {16, 80, 220, 600, 800, 1000}, 80, 100);
-    board[8] = createBusinessCell(8, "Lamoda", BusinessGroup::Clothes, 180, {18, 90, 250, 700, 875, 1050}, 90, 100);
-    board[9] = createBusinessCell(9, "H&M", BusinessGroup::Clothes, 200, {20, 100, 300, 750, 925, 1100}, 100, 100);
+    board[7] = createRegularBusinessCell(7, "Second Hand", BusinessGroup::Clothes, 1600);
+    board[8] = createRegularBusinessCell(8, "Lamoda", BusinessGroup::Clothes, 1800);
+    board[9] = createRegularBusinessCell(9, "H&M", BusinessGroup::Clothes, 2000);
 
     board[10] = createSpecialCell(10, "Jail", CellType::Corner);
 
-    board[11] = createBusinessCell(11, "Дикси", BusinessGroup::FoodMarket, 220, {22, 110, 330, 800, 975, 1150}, 110, 100);
-    board[12] = createBusinessCell(12, "Магнит", BusinessGroup::FoodMarket, 240, {24, 120, 360, 850, 1025, 1200}, 120, 100);
-    board[13] = createBusinessCell(13, "Пятёрочка", BusinessGroup::FoodMarket, 260, {26, 130, 390, 900, 1100, 1275}, 130, 100);
+    board[11] = createRegularBusinessCell(11, "Дикси", BusinessGroup::FoodMarket, 2200);
+    board[12] = createRegularBusinessCell(12, "Магнит", BusinessGroup::FoodMarket, 2400);
+    board[13] = createRegularBusinessCell(13, "Пятёрочка", BusinessGroup::FoodMarket, 2600);
 
-    board[14] = createSpecialCell(14, "Community Chest", CellType::CommunityChest);
+    board[14] = createSpecialCell(14, "Chance", CellType::Chance);
 
-    board[15] = createBusinessCell(15, "IT Top School", BusinessGroup::ITEducation, 200, {25, 50, 100, 200}, 100, 0, CellType::ExtraBusiness, 0);
+    board[15] = createBusinessCell(
+        15,
+        "IT Top School",
+        BusinessGroup::ITEducation,
+        2000,
+        {500, 1000, 2000, 4000},
+        100,
+        0,
+        CellType::ExtraBusiness,
+        0
+        );
 
-    board[16] = createSpecialCell(16, "Chance", CellType::Chance);
+    board[16] = createSpecialCell(16, "Community Chest", CellType::CommunityChest);
 
-    board[17] = createBusinessCell(17, "ВкусВилл", BusinessGroup::DarkStore, 280, {28, 150, 450, 1000, 1200, 1400}, 140, 150);
-    board[18] = createBusinessCell(18, "Яндекс Лавка", BusinessGroup::DarkStore, 300, {30, 160, 470, 1050, 1250, 1450}, 150, 150);
-    board[19] = createBusinessCell(19, "Самокат", BusinessGroup::DarkStore, 320, {32, 170, 500, 1100, 1300, 1500}, 160, 150);
+    board[17] = createRegularBusinessCell(17, "ВкусВилл", BusinessGroup::DarkStore, 2800);
+    board[18] = createRegularBusinessCell(18, "Яндекс Лавка", BusinessGroup::DarkStore, 3000);
+    board[19] = createRegularBusinessCell(19, "Самокат", BusinessGroup::DarkStore, 3200);
 
     board[20] = createSpecialCell(20, "Free Parking", CellType::Corner);
 
-    board[21] = createBusinessCell(21, "Ozon", BusinessGroup::Marketplace, 340, {34, 175, 500, 1100, 1300, 1500}, 170, 150);
-    board[22] = createBusinessCell(22, "Яндекс Маркет", BusinessGroup::Marketplace, 360, {36, 180, 520, 1150, 1350, 1550}, 180, 150);
-    board[23] = createBusinessCell(23, "Wildberries", BusinessGroup::Marketplace, 380, {38, 190, 550, 1200, 1400, 1600}, 190, 150);
+    board[21] = createRegularBusinessCell(21, "Ozon", BusinessGroup::Marketplace, 3400);
+    board[22] = createRegularBusinessCell(22, "Яндекс Маркет", BusinessGroup::Marketplace, 3600);
+    board[23] = createRegularBusinessCell(23, "Wildberries", BusinessGroup::Marketplace, 3800);
 
     board[24] = createSpecialCell(24, "Chance", CellType::Chance);
 
-    board[25] = createBusinessCell(25, "IT Top University", BusinessGroup::ITEducation, 200, {25, 50, 100, 200}, 100, 0, CellType::ExtraBusiness, 0);
+    board[25] = createBusinessCell(
+        25,
+        "IT Top University",
+        BusinessGroup::ITEducation,
+        2000,
+        {500, 1000, 2000, 4000},
+        100,
+        0,
+        CellType::ExtraBusiness,
+        0
+        );
 
     board[26] = createSpecialCell(26, "Community Chest", CellType::CommunityChest);
 
-    board[27] = createBusinessCell(27, "Ozon Банк", BusinessGroup::Bank, 400, {40, 200, 600, 1400, 1700, 2000}, 200, 200);
-    board[28] = createBusinessCell(28, "Альфа-Банк", BusinessGroup::Bank, 420, {42, 210, 620, 1450, 1750, 2050}, 210, 200);
-    board[29] = createBusinessCell(29, "Сбербанк", BusinessGroup::Bank, 440, {44, 220, 650, 1500, 1800, 2100}, 220, 200);
+    board[27] = createRegularBusinessCell(27, "Ozon Банк", BusinessGroup::Bank, 4000);
+    board[28] = createRegularBusinessCell(28, "Альфа-Банк", BusinessGroup::Bank, 4300);
+    board[29] = createRegularBusinessCell(29, "Сбербанк", BusinessGroup::Bank, 4600);
 
     board[30] = createSpecialCell(30, "Go To Jail", CellType::Corner);
 
-    board[31] = createBusinessCell(31, "CD Projekt Red", BusinessGroup::GameStudio, 460, {46, 230, 700, 1600, 1900, 2200}, 230, 200);
-    board[32] = createBusinessCell(32, "Rockstar", BusinessGroup::GameStudio, 480, {48, 240, 725, 1650, 1950, 2250}, 240, 200);
-    board[33] = createBusinessCell(33, "Valve", BusinessGroup::GameStudio, 500, {50, 250, 750, 1700, 2000, 2300}, 250, 200);
+    board[31] = createRegularBusinessCell(31, "CD Projekt Red", BusinessGroup::GameStudio, 5000);
+    board[32] = createRegularBusinessCell(32, "Rockstar", BusinessGroup::GameStudio, 5500);
+    board[33] = createRegularBusinessCell(33, "Valve", BusinessGroup::GameStudio, 6000);
 
     board[34] = createSpecialCell(34, "Chance", CellType::Chance);
 
-    board[35] = createBusinessCell(35, "IT Top College", BusinessGroup::ITEducation, 200, {25, 50, 100, 200}, 100, 0, CellType::ExtraBusiness, 0);
+    board[35] = createBusinessCell(
+        35,
+        "IT Top College",
+        BusinessGroup::ITEducation,
+        2000,
+        {500, 1000, 2000, 4000},
+        100,
+        0,
+        CellType::ExtraBusiness,
+        0
+        );
 
     board[36] = createSpecialCell(36, "Community Chest", CellType::CommunityChest);
 
-    board[37] = createBusinessCell(37, "Nvidia", BusinessGroup::IT, 520, {52, 260, 780, 1800, 2100, 2400}, 260, 200);
-    board[38] = createBusinessCell(38, "OpenAI", BusinessGroup::IT, 540, {54, 270, 800, 1900, 2200, 2500}, 270, 200);
-    board[39] = createBusinessCell(39, "Microsoft", BusinessGroup::IT, 560, {56, 280, 850, 2000, 2300, 2600}, 280, 200);
+    board[37] = createRegularBusinessCell(37, "Nvidia", BusinessGroup::IT, 6200);
+    board[38] = createRegularBusinessCell(38, "OpenAI", BusinessGroup::IT, 6600);
+    board[39] = createRegularBusinessCell(39, "Microsoft", BusinessGroup::IT, 7000);
 
     return board;
 }

@@ -396,11 +396,17 @@ void TcpClientController::handleAuctionUpdate(const QJsonObject& message)
 {
     const QJsonObject payload = message["payload"].toObject();
 
+    const int currentBid = payload["currentBid"].toInt();
+    const int minimumBid = payload.contains("minimumBid")
+                               ? payload["minimumBid"].toInt()
+                               : currentBid + 1;
+
     emit auctionUpdated(
         payload["cellId"].toInt(),
         payload["cellName"].toString(),
         payload["secondsLeft"].toInt(),
-        payload["currentBid"].toInt(),
+        currentBid,
+        minimumBid,
         payload["highestBidderName"].toString()
         );
 }

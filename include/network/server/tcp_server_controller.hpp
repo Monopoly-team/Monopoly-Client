@@ -86,15 +86,16 @@ private:
     bool                                gameStarted_            = false;
     GameController*                     gameController_;
 
-    QTimer*                             auctionTimer_ = nullptr;
+    QTimer*                             auctionTimer_           = nullptr;
 
-    bool                                auctionActive_ = false;
-    int                                 auctionSecondsLeft_ = 0;
-    int                                 auctionCellId_ = -1;
-    int                                 auctionCurrentBid_ = 0;
-    quint16                             auctionHighestBidderId_ = 0;
+    bool                                auctionActive_              = false;
+    int                                 auctionSecondsLeft_         = 0;
+    int                                 auctionCellId_              = -1;
+    int                                 auctionCurrentBid_          = 0;
+    int                                 auctionMinimumBid_          = 0;
+    quint16                             auctionHighestBidderId_     = 0;
     QString                             auctionHighestBidderName_;
-    quint16                             auctionOwnerTurnPlayerId_ = 0;
+    quint16                             auctionOwnerTurnPlayerId_   = 0;
 
 
 };

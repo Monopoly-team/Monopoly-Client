@@ -60,7 +60,14 @@ signals:
     void serverDisconnectRequested(const QString& reason);
     void gameStateUpdated(const ClientGameState& state);
     void purchaseOfferReceived(int cellId, const QString& cellName, int price);
-    void auctionUpdated(int cellId, const QString& cellName, int secondsLeft, int currentBid, const QString& highestBidderName);
+    void auctionUpdated(
+        int cellId,
+        const QString& cellName,
+        int secondsLeft,
+        int currentBid,
+        int minimumBid,
+        const QString& highestBidderName
+        );
     void auctionFinished();
 private slots:
     void onConnected();

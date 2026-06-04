@@ -1,5 +1,6 @@
 #include "game/game_rules.hpp"
 
+#include <algorithm>
 #include <limits>
 
 namespace {
@@ -31,7 +32,43 @@ int normalizedBoardPosition(int position, int boardSize)
 
     return normalizedPosition;
 }
+int scaledValue(int value, int numerator, int denominator)
+{
+    if (denominator == 0) {
+        return value;
+    }
 
+    return (value * numerator + denominator / 2) / denominator;
+}
+
+int groupBusinessCount(const GameState& state, BusinessGroup group)
+{
+    int count = 0;
+
+    for (const Cell& cell : state.board()) {
+        if (cell.type == CellType::Business && cell.group == group) {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
+int ownedGroupBusinessCount(const GameState& state, int ownerId, BusinessGroup group)
+{
+    int count = 0;
+
+    for (const Cell& cell : state.board()) {
+        if (cell.type == CellType::Business &&
+            cell.group == group &&
+            cell.ownerId == ownerId)
+        {
+            ++count;
+        }
+    }
+
+    return count;
+}
 } // namespace
 
 bool GameRules::isBusinessCell(const Cell& cell)
@@ -56,7 +93,7 @@ bool GameRules::canBuildHouse(const GameState& state, const Player& player, cons
            && cell.buildingCost > 0
            && cell.maxBuildingLevel > 0
            && cell.buildingLevel < cell.maxBuildingLevel
-           && player.balance >= cell.buildingCost
+           && player.balance >= calculateNextBuildingCost(cell)
            && ownsFullGroup(state, player.id, cell.group)
            && canBuildEvenly(state, cell)
            && !player.isBankrupt
@@ -127,7 +164,11 @@ int GameRules::calculateRent(const GameState& state, const Cell& cell)
             businessCount = 1;
         }
 
-        const int rentIndex = clampValue(businessCount - 1, 0, cell.rentLevels.size() - 1);
+        const int rentIndex = clampValue(
+            businessCount - 1,
+            0,
+            cell.rentLevels.size() - 1
+            );
 
         return cell.rentLevels[rentIndex];
     }
@@ -136,14 +177,56 @@ int GameRules::calculateRent(const GameState& state, const Cell& cell)
         return 0;
     }
 
-    const int buildingLevel = clampValue(cell.buildingLevel, 0, cell.rentLevels.size() - 1);
+    const int buildingLevel = clampValue(
+        cell.buildingLevel,
+        0,
+        cell.rentLevels.size() - 1
+        );
+
     int rent = cell.rentLevels[buildingLevel];
 
-    if (buildingLevel == 0 && ownsFullGroup(state, cell.ownerId, cell.group)) {
-        rent *= 2;
+    if (buildingLevel == 0) {
+        const int totalInGroup = groupBusinessCount(state, cell.group);
+        const int ownedInGroup = ownedGroupBusinessCount(state, cell.ownerId, cell.group);
+
+        if (totalInGroup >= 3 && ownedInGroup >= totalInGroup) {
+            rent *= 2;
+        } else if (totalInGroup >= 3 && ownedInGroup >= 2) {
+            rent = scaledValue(rent, 3, 2);
+        }
     }
 
     return rent;
+}
+
+int GameRules::calculateNextBuildingCost(const Cell& cell)
+{
+    if (cell.type != CellType::Business) {
+        return 0;
+    }
+
+    if (cell.buildingCost <= 0 || cell.maxBuildingLevel <= 0) {
+        return 0;
+    }
+
+    if (cell.buildingLevel >= cell.maxBuildingLevel) {
+        return 0;
+    }
+
+    const int nextLevel = cell.buildingLevel + 1;
+
+    switch (nextLevel) {
+    case 1:
+        return cell.buildingCost;                           // x1
+    case 2:
+        return scaledValue(cell.buildingCost, 133, 100);    // x1.33
+    case 3:
+        return scaledValue(cell.buildingCost, 3, 2);        // x1.5
+    case 4:
+        return scaledValue(cell.buildingCost, 7, 4);        // x1.75
+    default:
+        return cell.buildingCost * 2;                       // hotel x2
+    }
 }
 
 bool GameRules::checkBankruptcy(const Player& player)

@@ -1288,13 +1288,13 @@ QVector<ClientBoardCell> BoardWidget::createDefaultCells() const
     chest(26);
 
     business(27, "Озон банк",   BusinessGroup::Bank, 400, 40,":/resources/img/ozonbank.svg");
-    business(28, "Альфа-банк",  BusinessGroup::Bank, 420, 42,":/resources/img/alfa.svg");
-    business(29, "Сбербанк",    BusinessGroup::Bank, 440, 44,":/resources/img/sber.svg");
+    business(28, "Альфа-банк",  BusinessGroup::Bank, 430, 42,":/resources/img/alfa.svg");
+    business(29, "Сбербанк",    BusinessGroup::Bank, 460, 44,":/resources/img/sber.svg");
 
     // ПРАВО: сверху вниз
-    business(31, "Cd project",  BusinessGroup::GameStudio, 460, 46,":/resources/img/cd.svg");
-    business(32, "Rockstar",    BusinessGroup::GameStudio, 480, 48,":/resources/img/rockstar.svg");
-    business(33, "Valve",       BusinessGroup::GameStudio, 500, 50,":/resources/img/valve.svg");
+    business(31, "Cd project",  BusinessGroup::GameStudio, 500, 46,":/resources/img/cd.svg");
+    business(32, "Rockstar",    BusinessGroup::GameStudio, 550, 48,":/resources/img/rockstar.svg");
+    business(33, "Valve",       BusinessGroup::GameStudio, 600, 50,":/resources/img/valve.svg");
 
     chance(34);
 
@@ -1302,9 +1302,9 @@ QVector<ClientBoardCell> BoardWidget::createDefaultCells() const
 
     chest(36);
 
-    business(37, "Nvidia",      BusinessGroup::IT, 520, 52,":/resources/img/nvidia.svg");
-    business(38, "OpenAI",      BusinessGroup::IT, 540, 54,":/resources/img/openai.svg");
-    business(39, "Microsoft",   BusinessGroup::IT, 560, 56,":/resources/img/microsoft.svg");
+    business(37, "Nvidia",      BusinessGroup::IT, 620, 52,":/resources/img/nvidia.svg");
+    business(38, "OpenAI",      BusinessGroup::IT, 660, 54,":/resources/img/openai.svg");
+    business(39, "Microsoft",   BusinessGroup::IT, 700, 56,":/resources/img/microsoft.svg");
 
     return cells;
 }

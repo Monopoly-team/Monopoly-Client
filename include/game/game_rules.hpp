@@ -26,5 +26,6 @@ public:
 
     static int nearestBusinessCellIdFrom(const GameState& state, int position);
     static int propertyMaintenanceCost(const GameState& state, const Player& player, int costPerProperty);
+    static int calculateNextBuildingCost(const Cell& cell);
 
 };

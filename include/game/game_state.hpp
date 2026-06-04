@@ -8,7 +8,7 @@
 #include "game/models/cell_type.hpp"
 
 constexpr int BOARD_SIZE = 40;
-constexpr int PLAYER_START_BALANCE = 1500;
+constexpr int PLAYER_START_BALANCE = 15000;
 constexpr int NO_OWNER_ID = 0;
 constexpr int NO_WINNER_ID = 0;
 

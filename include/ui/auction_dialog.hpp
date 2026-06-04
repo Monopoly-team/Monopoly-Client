@@ -8,6 +8,7 @@ class QLineEdit;
 class QPushButton;
 class QMoveEvent;
 class QTimer;
+class QIntValidator;
 class AuctionDialog : public QDialog
 {
     Q_OBJECT
@@ -24,13 +25,14 @@ public:
         const QString& cellName,
         int secondsLeft,
         int currentBid,
+        int minimumBid,
         const QString& highestBidderName
         );
 private:
     void updateTitleIfNeeded(int cellId, const QString& cellName);
     void updateTimerIfNeeded(int secondsLeft);
-    void updateBidInfoIfNeeded(int currentBid, const QString& highestBidderName);
-    void applyAuctionUpdate(int cellId, const QString& cellName, int secondsLeft, int currentBid, const QString& highestBidderName);
+    void updateBidInfoIfNeeded(int currentBid, int minimumBid, const QString& highestBidderName);
+    void applyAuctionUpdate(int cellId, const QString& cellName, int secondsLeft, int currentBid, int minimumBid, const QString& highestBidderName);
     void flushPendingAuctionUpdate();
 private:
     int     cellId_ = -1;
@@ -56,4 +58,8 @@ private:
     QString pendingHighestBidderName_;
 
     QTimer* moveDebounceTimer_;
+
+    int minimumBid_ = 1;
+    int pendingMinimumBid_ = 1;
+    QIntValidator* bidValidator_ = nullptr;
 };

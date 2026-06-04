@@ -6,22 +6,22 @@
 
 namespace {
 
-constexpr int START_BONUS = 200;
+constexpr int START_BONUS = 2000;
 constexpr int JAIL_POSITION = 10;
 
 constexpr int MAX_DICE_VALUE = 6;
 
 constexpr int CHANCE_CARD_COUNT = 6;
-constexpr int CHANCE_REWARD = 100;
-constexpr int CHANCE_FINE = 50;
-constexpr int CHANCE_DEAL_REWARD = 75;
+constexpr int CHANCE_REWARD = 1000;
+constexpr int CHANCE_FINE = 500;
+constexpr int CHANCE_DEAL_REWARD = 750;
 
 constexpr int COMMUNITY_CHEST_CARD_COUNT = 6;
-constexpr int COMMUNITY_CHEST_REWARD = 150;
-constexpr int COMMUNITY_CHEST_FINE = 75;
-constexpr int COMMUNITY_CHEST_GRANT = 100;
-constexpr int COMMUNITY_CHEST_COLLECT_FROM_PLAYER = 50;
-constexpr int PROPERTY_MAINTENANCE_COST = 25;
+constexpr int COMMUNITY_CHEST_REWARD = 1500;
+constexpr int COMMUNITY_CHEST_FINE = 750;
+constexpr int COMMUNITY_CHEST_GRANT = 1000;
+constexpr int COMMUNITY_CHEST_COLLECT_FROM_PLAYER = 500;
+constexpr int PROPERTY_MAINTENANCE_COST = 250;
 
 } // namespace
 
@@ -194,8 +194,10 @@ QJsonObject GameController::gameStateToJson() const
         const int cellId = cellJson["id"].toInt(-1);
         const Cell* cell = session_.state().cellAt(cellId);
 
-        if (cell != nullptr)
+        if (cell != nullptr) {
             cellJson["rent"] = GameRules::calculateRent(session_.state(), *cell);
+            cellJson["buildingCost"] = GameRules::calculateNextBuildingCost(*cell);
+        }
 
         cellsJson[i] = cellJson;
     }
@@ -741,6 +743,7 @@ bool GameController::buildBusiness(Player& player, Cell& cell)
         appendEvent(QStringLiteral("У бизнеса \"%1\" нет доступных улучшений.").arg(cell.name));
         return false;
     }
+    const int upgradeCost = GameRules::calculateNextBuildingCost(cell);
 
     if (cell.buildingLevel >= cell.maxBuildingLevel) {
         appendEvent(QStringLiteral("Бизнес \"%1\" уже улучшен до максимума.").arg(cell.name));
@@ -756,7 +759,7 @@ bool GameController::buildBusiness(Player& player, Cell& cell)
         return false;
     }
 
-    if (player.balance < cell.buildingCost)
+    if (player.balance < upgradeCost)
     {
         appendEvent(
             QStringLiteral("%1 не хватает денег на улучшение \"%2\".")
@@ -777,7 +780,7 @@ bool GameController::buildBusiness(Player& player, Cell& cell)
         return false;
     }
 
-    player.balance -= cell.buildingCost;
+    player.balance -= upgradeCost;
     cell.buildingLevel += 1;
 
     appendEvent(
@@ -785,7 +788,7 @@ bool GameController::buildBusiness(Player& player, Cell& cell)
             .arg(playerName(player))
             .arg(cell.name)
             .arg(cell.buildingLevel)
-            .arg(cell.buildingCost));
+            .arg(upgradeCost));
 
     return true;
 }

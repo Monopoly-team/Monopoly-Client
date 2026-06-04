@@ -7,7 +7,7 @@
 #include <QVBoxLayout>
 #include <QMoveEvent>
 #include <QTimer>
-
+#include <QIntValidator>
 
 AuctionDialog::AuctionDialog(QWidget* parent)
     : QDialog(parent)
@@ -46,7 +46,8 @@ AuctionDialog::AuctionDialog(QWidget* parent)
     bidEdit_ = new QLineEdit(this);
     bidEdit_->setObjectName("auctionBidInput");
     bidEdit_->setPlaceholderText("Введите ставку");
-    bidEdit_->setValidator(new QIntValidator(1, 999999, bidEdit_));
+    bidValidator_ = new QIntValidator(1, 999999, bidEdit_);
+    bidEdit_->setValidator(bidValidator_);
 
     bidButton_ = new QPushButton("Сделать ставку", this);
     bidButton_->setObjectName("primaryDialogButton");
@@ -78,6 +79,7 @@ void AuctionDialog::updateAuction(
     const QString& cellName,
     int secondsLeft,
     int currentBid,
+    int minimumBid,
     const QString& highestBidderName
     )
 {
@@ -89,6 +91,7 @@ void AuctionDialog::updateAuction(
         pendingCellName_ = cellName;
         pendingSecondsLeft_ = secondsLeft;
         pendingCurrentBid_ = currentBid;
+        pendingMinimumBid_ = minimumBid;
         pendingHighestBidderName_ = highestBidderName;
 
         return;
@@ -99,6 +102,7 @@ void AuctionDialog::updateAuction(
         cellName,
         secondsLeft,
         currentBid,
+        minimumBid,
         highestBidderName
         );
 }
@@ -107,12 +111,13 @@ void AuctionDialog::applyAuctionUpdate(
     const QString& cellName,
     int secondsLeft,
     int currentBid,
+    int minimumBid,
     const QString& highestBidderName
     )
 {
     updateTitleIfNeeded(cellId, cellName);
     updateTimerIfNeeded(secondsLeft);
-    updateBidInfoIfNeeded(currentBid, highestBidderName);
+    updateBidInfoIfNeeded(currentBid, minimumBid, highestBidderName);
 }
 void AuctionDialog::moveEvent(QMoveEvent* event)
 {
@@ -133,6 +138,7 @@ void AuctionDialog::flushPendingAuctionUpdate()
         pendingCellName_,
         pendingSecondsLeft_,
         pendingCurrentBid_,
+        pendingMinimumBid_,
         pendingHighestBidderName_
         );
 }
@@ -161,13 +167,19 @@ void AuctionDialog::updateTimerIfNeeded(int secondsLeft)
 
 void AuctionDialog::updateBidInfoIfNeeded(
     int currentBid,
+    int minimumBid,
     const QString& highestBidderName
     )
 {
-    if (currentBid_ == currentBid && highestBidderName_ == highestBidderName)
+    if (currentBid_ == currentBid &&
+        minimumBid_ == minimumBid &&
+        highestBidderName_ == highestBidderName)
+    {
         return;
+    }
 
     currentBid_ = currentBid;
+    minimumBid_ = minimumBid;
     highestBidderName_ = highestBidderName;
 
     const QString bidder = highestBidderName_.isEmpty()
@@ -181,6 +193,9 @@ void AuctionDialog::updateBidInfoIfNeeded(
         );
 
     bidEdit_->setPlaceholderText(
-        QStringLiteral("Минимум %1").arg(currentBid_ + 1)
+        QStringLiteral("Минимум %1").arg(minimumBid_)
         );
+
+    if (bidValidator_)
+        bidValidator_->setBottom(minimumBid_);
 }
