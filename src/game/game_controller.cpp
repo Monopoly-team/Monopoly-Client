@@ -167,8 +167,9 @@ bool GameController::handlePlayerAction(int playerId, const QJsonObject& payload
     bool isHandled = false;
 
     if (actionType == "roll_dice" || actionType == "roll") {
-        isHandled = handleRollDiceAction(*player, payload);
-    } else if (actionType == "buy_business" || actionType == "buy_property" || actionType == "buy_cell") {
+        isHandled = handleRollDiceAction(*player);
+    }
+    else if (actionType == "buy_business" || actionType == "buy_property" || actionType == "buy_cell") {
         isHandled = handleBuyBusinessAction(*player);
     } else if (actionType == "build_business" || actionType == "build") {
         isHandled = handleBuildBusinessAction(*player, payload);
@@ -387,7 +388,7 @@ QString GameController::actionTypeFromJson(const QJsonObject& payload) const
     return actionType.toLower();
 }
 
-bool GameController::handleRollDiceAction(Player& player, const QJsonObject& payload)
+bool GameController::handleRollDiceAction(Player& player)
 {
     if (hasRolledThisTurn_) {
         appendEvent(QStringLiteral("%1 уже бросал кубики в этом ходу.").arg(playerName(player)));
@@ -411,38 +412,16 @@ bool GameController::handleRollDiceAction(Player& player, const QJsonObject& pay
         return true;
     }
 
-    int dice1 = payload["dice1"].toInt(0);
-    int dice2 = payload["dice2"].toInt(0);
-    int steps = payload["steps"].toInt(0);
+    const int dice1 = QRandomGenerator::global()->bounded(MAX_DICE_VALUE) + 1;
+    const int dice2 = QRandomGenerator::global()->bounded(MAX_DICE_VALUE) + 1;
+    const int steps = dice1 + dice2;
 
-    if (steps <= 0) {
-        if (dice1 < 1 || dice1 > MAX_DICE_VALUE) {
-            dice1 = QRandomGenerator::global()->bounded(MAX_DICE_VALUE) + 1;
-        }
-
-        if (dice2 < 1 || dice2 > MAX_DICE_VALUE) {
-            dice2 = QRandomGenerator::global()->bounded(MAX_DICE_VALUE) + 1;
-        }
-
-        steps = dice1 + dice2;
-
-        appendEvent(
-            QStringLiteral("%1 выбросил %4. Кубики: %2 и %3.")
-                .arg(playerName(player))
-                .arg(dice1)
-                .arg(dice2)
-                .arg(steps));
-    } else {
-        if (steps < 1 || steps > MAX_DICE_VALUE * 2) {
-            appendEvent(QStringLiteral("Некорректное количество шагов: %1.").arg(steps));
-            return false;
-        }
-
-        appendEvent(
-            QStringLiteral("%1 выбросил %2.")
-                .arg(playerName(player))
-                .arg(steps));
-    }
+    appendEvent(
+        QStringLiteral("%1 выбросил %4. Кубики: %2 и %3.")
+            .arg(playerName(player))
+            .arg(dice1)
+            .arg(dice2)
+            .arg(steps));
 
     session_.state().setLastDiceValues(dice1, dice2);
 

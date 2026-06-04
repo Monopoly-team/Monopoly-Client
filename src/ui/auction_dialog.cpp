@@ -15,7 +15,7 @@ AuctionDialog::AuctionDialog(QWidget* parent)
     setObjectName("auctionDialog");
     setModal(false);
     setWindowTitle("Торги");
-    setFixedSize(560, 340);
+    setFixedSize(660, 340);
     setSizeGripEnabled(false);
 
     moveDebounceTimer_ = new QTimer(this);

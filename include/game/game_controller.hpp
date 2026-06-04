@@ -47,7 +47,7 @@ signals:
 private:
     QString actionTypeFromJson(const QJsonObject& payload) const;
 
-    bool handleRollDiceAction(Player& player, const QJsonObject& payload);
+    bool handleRollDiceAction(Player& player);
     bool handleBuyBusinessAction(Player& player);
     bool handleBuildBusinessAction(Player& player, const QJsonObject& payload);
     bool handleEndTurnAction(Player& player);
