@@ -49,7 +49,6 @@ LobbyWidget::LobbyWidget(QWidget *parent)
 
         playerCards_.push_back(playerCard);
     }
-    qDebug() << "[Lobby] cards created:" << playerCards_.size();
 
     cardLayout_->addWidget(lobbyTitle_,0,Qt::AlignHCenter);
     cardLayout_->addSpacing(20);
@@ -77,7 +76,6 @@ void LobbyWidget::onReadyChanged()
 
 void LobbyWidget::updatePlayers(const QVector<ClientLobbyPlayer> &players)
 {
-    qDebug() << "[Lobby] updatePlayers called";
     for(PlayerCardLobbyWidget* card : playerCards_)
         card->hide();
 

@@ -144,11 +144,6 @@ void TcpClientController::handleMessage(const QJsonObject& message)
         emit countdownCancelled();
         return;
     }
-    if (type == "chat_message")
-    {
-        handleChatMessage(message);
-        return;
-    }
     if (type == "game_event")
     {
         handleGameEvent(message);

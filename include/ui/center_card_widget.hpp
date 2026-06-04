@@ -3,6 +3,7 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QFrame>
 
 class CenterCardWidget : public QWidget
 {
@@ -16,6 +17,7 @@ protected:
 };
 
 inline CenterCardWidget::CenterCardWidget(QWidget *parent)
+    : QWidget(parent)
 {
     setObjectName("centerCardWidget");
 

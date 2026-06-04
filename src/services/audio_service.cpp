@@ -1,7 +1,5 @@
 #include "services/audio_service.hpp"
 
-#include "services/audio_service.hpp"
-
 AudioService::AudioService(QObject* parent)
     : QObject(parent)
 {

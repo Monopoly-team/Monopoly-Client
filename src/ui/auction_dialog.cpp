@@ -7,7 +7,7 @@
 #include <QVBoxLayout>
 #include <QMoveEvent>
 #include <QTimer>
-#include <QIntValidator>
+
 
 AuctionDialog::AuctionDialog(QWidget* parent)
     : QDialog(parent)

@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(menuWidget_,       &MenuWidget::joinGameRequested,                  this, &MainWindow::joinGame);
     connect(clientController_, &TcpClientController::serverDisconnectRequested, this, &MainWindow::onServerDisconnectRequested);
     connect(clientController_, &TcpClientController::connectedToServer,         this, &MainWindow::sendConnectRequest);
-    connect(clientController_, &TcpClientController::lobbyUpdated,              lobbyWidget_, &LobbyWidget::updatePlayers);
+    connect(clientController_, &TcpClientController::lobbyUpdated,              this, &MainWindow::onLobbyUpdated);
     connect(clientController_, &TcpClientController::gameStarted,               this, &MainWindow::showGame);
     connect(lobbyWidget_,      &LobbyWidget::readyChanged,                      this, &MainWindow::onReadyChanged);
     connect(clientController_, &TcpClientController::countdownUpdated,          lobbyWidget_, &LobbyWidget::updateCountdown);

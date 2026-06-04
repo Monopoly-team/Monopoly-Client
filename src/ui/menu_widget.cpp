@@ -1,6 +1,7 @@
 #include "menu_widget.hpp"
 
 MenuWidget::MenuWidget(QWidget *parent)
+    : CenterCardWidget(parent)
 {
     menuLabel_ = new QLabel("Меню", card_);
     menuLabel_->setObjectName("loginSubtitle");

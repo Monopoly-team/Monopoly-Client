@@ -11,7 +11,7 @@ PlayerCardBaseWidget::PlayerCardBaseWidget(QWidget *parent)
     setObjectName("playerCard");
 
     avatar_     = new QLabel("[]",       this);
-    nickname_   = new QLabel("Полад",  this);
+    nickname_   = new QLabel("Игрок",  this);
 
     nickname_->setObjectName("nicknameLabel");
     avatar_->setObjectName("avatar");

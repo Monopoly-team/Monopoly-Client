@@ -103,8 +103,4 @@ private:
 private:
     QTcpSocket* socket_;
     quint16     playerId_ = 0;
-    int lastDiceFirst = 1;
-    int lastDiceSecond = 1;
-
 };
-// TODO: Добавить обработку ready_changed и lobby_update на клиенте.
