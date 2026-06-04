@@ -745,7 +745,7 @@ void TcpServerController::handlePlayerAction(QTcpSocket* senderSocket, const QJs
     const QJsonObject payload = message["payload"].toObject();
     const QString action = payload["action"].toString();
 
-    if (auctionActive_
+    if (auction_.active
         && action != "auction_bid"
         && action != "start_auction")
     {
@@ -790,17 +790,10 @@ void TcpServerController::handlePlayerAction(QTcpSocket* senderSocket, const QJs
 
     if (stateAfterAction.isGameOver())
     {
-        if (auctionActive_)
+        if (auction_.active)
         {
             auctionTimer_->stop();
-
-            auctionActive_ = false;
-            auctionSecondsLeft_ = 0;
-            auctionCellId_ = -1;
-            auctionCurrentBid_ = 0;
-            auctionHighestBidderId_ = 0;
-            auctionHighestBidderName_.clear();
-            auctionOwnerTurnPlayerId_ = 0;
+            auction_.reset();
 
             broadcastToPlayers(
                 NetworkMessage::create("auction_finished", SERVER_ID, QJsonObject{})
@@ -826,6 +819,12 @@ void TcpServerController::handlePlayerAction(QTcpSocket* senderSocket, const QJs
 
 void TcpServerController::shutdownGame(const QString& reason)
 {
+    if (auctionTimer_)
+        auctionTimer_->stop();
+
+    auction_.reset();
+    clearPendingPurchaseOffer();
+
     QJsonObject payload;
     payload["reason"] = reason;
 
@@ -918,7 +917,7 @@ void TcpServerController::sendPurchaseOfferToCurrentPlayer(quint16 expectedPlaye
 void TcpServerController::startAuction(quint16 requesterPlayerId)
 {
 
-    if (auctionActive_)
+    if (auction_.active)
         return;
 
     const GameState& state = gameController_->gameState();
@@ -933,7 +932,6 @@ void TcpServerController::startAuction(quint16 requesterPlayerId)
     const Cell* cell = state.cellAt(player->position);
     if (!cell)
         return;
-    auctionMinimumBid_ = cell->price;
     if (purchaseOfferPendingPlayerId_ != requesterPlayerId ||
         purchaseOfferPendingCellId_ != cell->id)
     {
@@ -943,15 +941,15 @@ void TcpServerController::startAuction(quint16 requesterPlayerId)
     if (!GameRules::isBusinessCell(*cell) || cell->ownerId != NO_OWNER_ID)
         return;
 
-    auctionActive_ = true;
-    auctionSecondsLeft_ = 15;
-    auctionCellId_ = cell->id;
+    auction_.active = true;
+    auction_.secondsLeft = 15;
+    auction_.cellId = cell->id;
 
-    auctionMinimumBid_ = cell->price;
-    auctionCurrentBid_ = 0;
-    auctionHighestBidderId_ = 0;
-    auctionHighestBidderName_.clear();
-    auctionOwnerTurnPlayerId_ = player->id;
+    auction_.minimumBid = cell->price;
+    auction_.currentBid = 0;
+    auction_.highestBidderId = 0;
+    auction_.highestBidderName.clear();
+    auction_.ownerTurnPlayerId = player->id;
 
     clearPendingPurchaseOffer();
 
@@ -965,15 +963,15 @@ void TcpServerController::clearPendingPurchaseOffer()
 }
 void TcpServerController::handleAuctionBid(quint16 playerId, const QJsonObject& payload)
 {
-    if (!auctionActive_)
+    if (!auction_.active)
         return;
 
     const int amount = payload["amount"].toInt(0);
 
     const int minimumAllowedBid =
-        auctionHighestBidderId_ == 0
-            ? auctionMinimumBid_
-            : auctionCurrentBid_ + 1;
+        auction_.highestBidderId == 0
+            ? auction_.minimumBid
+            : auction_.currentBid + 1;
 
     if (amount < minimumAllowedBid)
         return;
@@ -987,22 +985,22 @@ void TcpServerController::handleAuctionBid(quint16 playerId, const QJsonObject& 
     if (player->balance < amount)
         return;
 
-    auctionCurrentBid_ = amount;
-    auctionHighestBidderId_ = playerId;
-    auctionHighestBidderName_ = player->nickname;
-    if (auctionSecondsLeft_ < 5)
-        auctionSecondsLeft_ = 5;
+    auction_.currentBid = amount;
+    auction_.highestBidderId = playerId;
+    auction_.highestBidderName = player->nickname;
+    if (auction_.secondsLeft < 5)
+        auction_.secondsLeft = 5;
     broadcastAuctionUpdate();
 }
 
 void TcpServerController::onAuctionTick()
 {
-    if (!auctionActive_)
+    if (!auction_.active)
         return;
 
-    auctionSecondsLeft_--;
+    auction_.secondsLeft--;
 
-    if (auctionSecondsLeft_ <= 0)
+    if (auction_.secondsLeft <= 0)
     {
         finishAuction();
         return;
@@ -1014,7 +1012,7 @@ void TcpServerController::onAuctionTick()
 void TcpServerController::broadcastAuctionUpdate()
 {
     const GameState& state = gameController_->gameState();
-    const Cell* cell = state.cellAt(auctionCellId_);
+    const Cell* cell = state.cellAt(auction_.cellId);
 
     if (!cell)
         return;
@@ -1023,14 +1021,14 @@ void TcpServerController::broadcastAuctionUpdate()
 
     payload["cellId"]            = cell->id;
     payload["cellName"]          = cell->name;
-    payload["secondsLeft"]       = auctionSecondsLeft_;
-    payload["currentBid"]        = auctionCurrentBid_;
+    payload["secondsLeft"]       = auction_.secondsLeft;
+    payload["currentBid"]        = auction_.currentBid;
     payload["minimumBid"] =
-        auctionHighestBidderId_ == 0
-            ? auctionMinimumBid_
-            : auctionCurrentBid_ + 1;
-    payload["highestBidderId"]   = auctionHighestBidderId_;
-    payload["highestBidderName"] = auctionHighestBidderName_;
+        auction_.highestBidderId == 0
+            ? auction_.minimumBid
+            : auction_.currentBid + 1;
+    payload["highestBidderId"]   = auction_.highestBidderId;
+    payload["highestBidderName"] = auction_.highestBidderName;
 
     broadcastToPlayers(
         NetworkMessage::create("auction_update", SERVER_ID, payload)
@@ -1041,30 +1039,22 @@ void TcpServerController::finishAuction()
 {
     auctionTimer_->stop();
 
-    const bool hasWinner = auctionHighestBidderId_ != 0 && auctionCurrentBid_ > 0;
+    const bool hasWinner = auction_.highestBidderId != 0 && auction_.currentBid > 0;
 
     if (hasWinner)
     {
         gameController_->buyAuctionBusiness(
-            auctionHighestBidderId_,
-            auctionCellId_,
-            auctionCurrentBid_
+            auction_.highestBidderId,
+            auction_.cellId,
+            auction_.currentBid
             );
     }
-    if (gameController_->gameState().currentPlayerId() == auctionOwnerTurnPlayerId_)
+    if (gameController_->gameState().currentPlayerId() == auction_.ownerTurnPlayerId)
     {
         gameController_->finishCurrentTurn();
     }
 
-    auctionActive_          = false;
-    auctionSecondsLeft_     = 0;
-    auctionCellId_          = -1;
-    auctionCurrentBid_      = 0;
-    auctionMinimumBid_      = 0;
-    auctionHighestBidderId_ = 0;
-    auctionHighestBidderName_.clear();
-    auctionOwnerTurnPlayerId_ = 0;
-    auctionMinimumBid_ = 0;
+    auction_.reset();
 
     clearPendingPurchaseOffer();
 

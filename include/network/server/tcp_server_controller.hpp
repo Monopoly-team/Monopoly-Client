@@ -1,25 +1,33 @@
 #pragma once
 
-#include <QTcpServer>
 #include <QObject>
-#include <QTcpSocket>
-#include <QVector>
-#include <QJsonObject>
 #include <QHash>
+#include <QJsonObject>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QTimer>
+#include <QVector>
 
 #include "game/game_controller.hpp"
 
 struct ServerPlayer
 {
-    QString     nickname;
-    quint16     id;
-    bool        ready = false;
-    QString     avatarPath;
+    QString nickname;
+    quint16 id;
+    bool ready = false;
+    QString avatarPath;
 };
 
 class TcpServerController : public QObject
 {
+    Q_OBJECT
+
+public:
+    explicit TcpServerController(QObject* parent = nullptr);
+    ~TcpServerController() override;
+
+    bool startServer(quint16 port);
+    bool isListening() const;
 
 private slots:
     void onNewConnection();
@@ -27,23 +35,43 @@ private slots:
     void onCountdownTick();
     void onDisconnect();
     void onAuctionTick();
-public:
-    TcpServerController(QObject* parent = nullptr);
-    ~TcpServerController() override;
 
-    bool startServer(quint16 port);
-    bool isListening() const;
+private:
+    struct AuctionState
+    {
+        bool active         = false;
+        int secondsLeft     = 0;
+        int cellId          = -1;
+        int currentBid      = 0;
+        int minimumBid      = 0;
+        quint16 highestBidderId     = 0;
+        QString highestBidderName;
+        quint16 ownerTurnPlayerId   = 0;
+
+        void reset()
+        {
+            active          = false;
+            secondsLeft     = 0;
+            cellId          = -1;
+            currentBid      = 0;
+            minimumBid      = 0;
+            highestBidderId = 0;
+            highestBidderName.clear();
+            ownerTurnPlayerId = 0;
+        }
+    };
+
 private:
     QString randomAvailableAvatarPath() const;
 
     void handleMessage(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleConnectRequest(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleReadyChanged(QTcpSocket* senderSocket, const QJsonObject& message);
-    void handleChatMessage(QTcpSocket* senderSocket, const QJsonObject &message);
+    void handleChatMessage(QTcpSocket* senderSocket, const QJsonObject& message);
     void handlePlayerAction(QTcpSocket* senderSocket, const QJsonObject& message);
 
-    void handleAdminMessage(QTcpSocket* senderSocket, const QJsonObject &message);
-    void handlePlayerMessage(QTcpSocket* senderSocket, const QJsonObject &message);
+    void handleAdminMessage(QTcpSocket* senderSocket, const QJsonObject& message);
+    void handlePlayerMessage(QTcpSocket* senderSocket, const QJsonObject& message);
 
     void sendToClient(QTcpSocket* client, const QJsonObject& message);
     void broadcastMessage(const QJsonObject& message);
@@ -78,32 +106,23 @@ private:
     QTcpSocket* socketByPlayerId(quint16 playerId) const;
 
 private:
-    QTcpServer*                         server_;
-    QVector<QTcpSocket*>                clients_;
-    QHash<QTcpSocket*, ServerPlayer>    players_;
-    quint16                             nextPlayerId_           = 1;
-    QTcpSocket*                         admin_                  = nullptr;
-    QTimer*                             startCountdownTimer_;
-    int                                 countdownSecondsLeft_   = 5;
-    bool                                countdownActive_        = false;
-    bool                                gameStarted_            = false;
-    GameController*                     gameController_;
+    QTcpServer* server_ = nullptr;
+    QVector<QTcpSocket*> clients_;
+    QHash<QTcpSocket*, ServerPlayer> players_;
+    quint16 nextPlayerId_ = 1;
 
-    QTimer*                             auctionTimer_           = nullptr;
+    QTcpSocket* admin_ = nullptr;
 
-    bool                                auctionActive_              = false;
-    int                                 auctionSecondsLeft_         = 0;
-    int                                 auctionCellId_              = -1;
-    int                                 auctionCurrentBid_          = 0;
-    int                                 auctionMinimumBid_          = 0;
-    quint16                             auctionHighestBidderId_     = 0;
-    QString                             auctionHighestBidderName_;
-    quint16                             auctionOwnerTurnPlayerId_   = 0;
+    QTimer* startCountdownTimer_ = nullptr;
+    int countdownSecondsLeft_ = 5;
+    bool countdownActive_ = false;
+    bool gameStarted_ = false;
 
-    quint16                             purchaseOfferPendingPlayerId_ = 0;
-    int                                 purchaseOfferPendingCellId_ = -1;
+    GameController* gameController_ = nullptr;
 
+    QTimer* auctionTimer_ = nullptr;
+    AuctionState auction_;
 
+    quint16 purchaseOfferPendingPlayerId_ = 0;
+    int purchaseOfferPendingCellId_ = -1;
 };
-
-//TODO: Отправлять серверу список игроков
