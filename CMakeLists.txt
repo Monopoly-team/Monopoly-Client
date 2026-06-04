@@ -40,6 +40,12 @@ add_executable(${PROJECT_NAME}
     ${RESOURCES}
 )
 
+if(MINGW)
+    target_link_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:-mwindows>
+    )
+endif()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets

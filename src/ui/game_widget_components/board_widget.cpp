@@ -127,7 +127,9 @@ QString imagePathForCell(quint8 id)
     case 2:  return ":/resources/img/eapteka.png";
     case 3:  return ":/resources/img/rigla.png";
 
+    case 4:  return ":/resources/img/chanceV.png";
     case 5:  return ":/resources/img/it_top_eng.svg";
+    case 6:  return ":/resources/img/chestV.png";
 
     case 7:  return ":/resources/img/secondhand.svg";
     case 8:  return ":/resources/img/lamoda.svg";
@@ -137,7 +139,9 @@ QString imagePathForCell(quint8 id)
     case 12: return ":/resources/img/magnit.svg";
     case 13: return ":/resources/img/diksi.svg";
 
+    case 14:  return ":/resources/img/chanceH.png";
     case 15: return ":/resources/img/it_top_sch.svg";
+    case 16:  return ":/resources/img/chestH.png";
 
     case 17: return ":/resources/img/vkusvill.svg";
     case 18: return ":/resources/img/lavka.svg";
@@ -147,7 +151,9 @@ QString imagePathForCell(quint8 id)
     case 22: return ":/resources/img/yamarket.svg";
     case 23: return ":/resources/img/wb.svg";
 
+    case 24:  return ":/resources/img/chanceV.png";
     case 25: return ":/resources/img/it_top_uni.svg";
+    case 26:  return ":/resources/img/chestV.png";
 
     case 27: return ":/resources/img/ozonbank.svg";
     case 28: return ":/resources/img/alfa.svg";
@@ -157,7 +163,9 @@ QString imagePathForCell(quint8 id)
     case 32: return ":/resources/img/rockstar.svg";
     case 33: return ":/resources/img/valve.svg";
 
+    case 34:  return ":/resources/img/chanceH.png";
     case 35: return ":/resources/img/it_top_col.svg";
+    case 36:  return ":/resources/img/chestH.png";
 
     case 37: return ":/resources/img/nvidia.svg";
     case 38: return ":/resources/img/openai.svg";
@@ -1152,15 +1160,51 @@ void BoardWidget::drawCell(
 
     else if (cell->type == CellType::Chance)
     {
-        painter.setPen(QColor("#B56CFF"));
-        painter.setFont(QFont("Segoe UI", 18, QFont::Bold));
-        painter.drawText(rect, Qt::AlignCenter, "?");
+        if (!cell->imagePath.isEmpty())
+        {
+            const QRect imageRect = rect.adjusted(8, 8, -8, -8);
+            const QPixmap pixmap = cachedCellPixmap(cell->imagePath, imageRect.size());
+
+            if (!pixmap.isNull())
+            {
+                const QPoint pos(
+                    imageRect.center().x() - pixmap.width() / 2,
+                    imageRect.center().y() - pixmap.height() / 2
+                    );
+
+                painter.drawPixmap(pos, pixmap);
+            }
+        }
+        else
+        {
+            painter.setPen(QColor("#B56CFF"));
+            painter.setFont(QFont("Segoe UI", 18, QFont::Bold));
+            painter.drawText(rect, Qt::AlignCenter, "?");
+        }
     }
     else if (cell->type == CellType::CommunityChest)
     {
-        painter.setPen(QColor("#50C878"));
-        painter.setFont(QFont("Segoe UI", 16, QFont::Bold));
-        painter.drawText(rect, Qt::AlignCenter, "!");
+        if (!cell->imagePath.isEmpty())
+        {
+            const QRect imageRect = rect.adjusted(8, 8, -8, -8);
+            const QPixmap pixmap = cachedCellPixmap(cell->imagePath, imageRect.size());
+
+            if (!pixmap.isNull())
+            {
+                const QPoint pos(
+                    imageRect.center().x() - pixmap.width() / 2,
+                    imageRect.center().y() - pixmap.height() / 2
+                    );
+
+                painter.drawPixmap(pos, pixmap);
+            }
+        }
+        else
+        {
+            painter.setPen(QColor("#50C878"));
+            painter.setFont(QFont("Segoe UI", 16, QFont::Bold));
+            painter.drawText(rect, Qt::AlignCenter, "!");
+        }
     }
     else
     {

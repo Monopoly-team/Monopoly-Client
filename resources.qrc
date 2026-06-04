@@ -55,5 +55,10 @@
         <file>resources/img/cat4.png</file>
         <file>resources/img/cat5.png</file>
         <file>resources/img/cat6.png</file>
+        <file>resources/img/_.svg</file>
+        <file>resources/img/chestH.png</file>
+        <file>resources/img/chestV.png</file>
+        <file>resources/img/chanceH.png</file>
+        <file>resources/img/chanceV.png</file>
     </qresource>
 </RCC>
