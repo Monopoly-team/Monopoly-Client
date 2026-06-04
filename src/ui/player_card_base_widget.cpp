@@ -1,5 +1,7 @@
 #include "player_card_base_widget.hpp"
 
+#include <QPixmap>
+
 PlayerCardBaseWidget::PlayerCardBaseWidget(QWidget *parent)
     : QFrame{parent}
 {
@@ -15,9 +17,8 @@ PlayerCardBaseWidget::PlayerCardBaseWidget(QWidget *parent)
     avatar_->setObjectName("avatar");
     avatar_->setScaledContents(true);
 
-    QPixmap avatar(":/resources/img/user2.png");
-    avatar_->setFixedSize(96,96);
-    avatar_->setPixmap(avatar.scaled(96,96,Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    avatar_->setFixedSize(96, 96);
+    setAvatarPath(QStringLiteral(":/resources/img/user2.png"));
 
     rootLayout_->addSpacing(11);
     rootLayout_->addWidget(avatar_);
@@ -32,3 +33,22 @@ void PlayerCardBaseWidget::setNickname(const QString &nickname)
     nickname_->setText(nickname);
 }
 
+void PlayerCardBaseWidget::setAvatarPath(const QString& avatarPath)
+{
+    const QString path = avatarPath.trimmed().isEmpty()
+    ? QStringLiteral(":/resources/img/user2.png")
+    : avatarPath;
+
+    QPixmap avatarPixmap(path);
+
+    if (avatarPixmap.isNull())
+        avatarPixmap.load(QStringLiteral(":/resources/img/user2.png"));
+
+    avatar_->setPixmap(
+        avatarPixmap.scaled(
+            avatar_->size(),
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+            )
+        );
+}

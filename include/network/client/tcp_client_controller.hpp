@@ -11,14 +11,17 @@
 struct ClientLobbyPlayer
 {
     QString     nickname;
+    QString     avatarPath;
     quint16     id    = 0;
     bool        ready = false;
+
 };
 
 struct ClientGamePlayer
 {
     quint16 id          = 0;
     QString nickname;
+    QString avatarPath;
     qint32  balance     = 0;
     quint8  position    = 0;
     QString color;

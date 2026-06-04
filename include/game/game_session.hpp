@@ -14,7 +14,12 @@ public:
 
     void reset();
 
-    bool addPlayer(int playerId, const QString& nickname, const QString& color = QString());
+    bool addPlayer(
+        int playerId,
+        const QString& nickname,
+        const QString& color = QString(),
+        const QString& avatarPath = QString()
+        );
     bool removePlayer(int playerId);
 
     bool start();

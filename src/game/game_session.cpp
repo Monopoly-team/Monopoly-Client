@@ -25,7 +25,12 @@ void GameSession::reset()
     state_ = GameState();
 }
 
-bool GameSession::addPlayer(int playerId, const QString& nickname, const QString& color)
+bool GameSession::addPlayer(
+    int playerId,
+    const QString& nickname,
+    const QString& color,
+    const QString& avatarPath
+    )
 {
     if (isPlaying() || state_.isGameOver()) {
         return false;
@@ -33,13 +38,16 @@ bool GameSession::addPlayer(int playerId, const QString& nickname, const QString
 
     if (Player* player = state_.playerById(playerId)) {
         player->nickname = nickname;
+        if (!avatarPath.trimmed().isEmpty()) {
+            player->avatarPath = avatarPath;
+        }
         if (!color.trimmed().isEmpty()) {
             player->color = color;
         }
         return true;
     }
 
-    state_.addPlayer(playerId, nickname, color);
+    state_.addPlayer(playerId, nickname, color, avatarPath);
 
     if (state_.currentPlayerId() == NO_OWNER_ID) {
         state_.setCurrentPlayerId(playerId);

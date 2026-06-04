@@ -224,6 +224,7 @@ void TcpClientController::handleLobbyUpdate(const QJsonObject &message)
 
         player.id       = static_cast<quint16>(object["id"].toInt());
         player.nickname = object["nickname"].toString();
+        player.avatarPath = object["avatarPath"].toString();
         player.ready    = object["ready"].toBool();
 
         players.push_back(player);
@@ -276,6 +277,7 @@ void TcpClientController::handleGameState(const QJsonObject& message)
 
         player.id = static_cast<quint16>(object["id"].toInt());
         player.nickname = object["nickname"].toString();
+        player.avatarPath = object["avatarPath"].toString();
         player.balance = object["balance"].toInt();
         player.position = static_cast<quint8>(object["position"].toInt());
         player.color = object["color"].toString();

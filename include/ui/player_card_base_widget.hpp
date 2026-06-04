@@ -11,7 +11,7 @@ class PlayerCardBaseWidget : public QFrame
 public:
     explicit PlayerCardBaseWidget(QWidget *parent = nullptr);
     ~PlayerCardBaseWidget() override;
-
+    void setAvatarPath(const QString& avatarPath);
     void setNickname(const QString& nickname);
 protected:
     QLabel*      avatar_;

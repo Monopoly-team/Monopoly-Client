@@ -7,7 +7,24 @@
 #include <QHostAddress>
 #include <QDebug>
 #include <QJsonArray>
+#include <QRandomGenerator>
 
+namespace
+{
+
+QVector<QString> catAvatarPaths()
+{
+    return {
+        QStringLiteral(":/resources/img/cat1.png"),
+        QStringLiteral(":/resources/img/cat2.png"),
+        QStringLiteral(":/resources/img/cat3.png"),
+        QStringLiteral(":/resources/img/cat4.png"),
+        QStringLiteral(":/resources/img/cat5.png"),
+        QStringLiteral(":/resources/img/cat6.png")
+    };
+}
+
+} // namespace
 
 TcpServerController::TcpServerController(QObject *parent)
     : QObject(parent)
@@ -271,17 +288,25 @@ void TcpServerController::handleConnectRequest(QTcpSocket *senderSocket, const Q
     }
     ServerPlayer player;
 
-    player.id       = nextPlayerId_++;
-    player.nickname = nickname;
-    player.ready    = false;
+    player.id         = nextPlayerId_++;
+    player.nickname   = nickname;
+    player.avatarPath = randomAvailableAvatarPath();
+    player.ready      = false;
 
-    players_.insert(senderSocket,player);
-    gameController_->addPlayer(player.id, player.nickname);
+    players_.insert(senderSocket, player);
+
+    gameController_->addPlayer(
+        player.id,
+        player.nickname,
+        QString(),
+        player.avatarPath
+        );
 
     QJsonObject acceptedPayload;
 
     acceptedPayload["playerId"] = player.id;
     acceptedPayload["nickname"] = player.nickname;
+    acceptedPayload["avatarPath"] = player.avatarPath;
 
     QJsonObject acceptedMessage =
         NetworkMessage::create(
@@ -332,6 +357,7 @@ void TcpServerController::broadcastLobbyUpdate()
 
         playerObject["id"]       = player.id;
         playerObject["nickname"] = player.nickname;
+        playerObject["avatarPath"] = player.avatarPath;
         playerObject["ready"]    = player.ready;
 
         playersArray.append(playerObject);
@@ -1013,4 +1039,21 @@ void TcpServerController::finishAuction()
         );
 
     broadcastGameUpdate();
+}
+
+QString TcpServerController::randomAvailableAvatarPath() const
+{
+    QVector<QString> availableAvatars = catAvatarPaths();
+
+    for (auto it = players_.cbegin(); it != players_.cend(); ++it)
+    {
+        availableAvatars.removeAll(it.value().avatarPath);
+    }
+
+    if (availableAvatars.isEmpty())
+        availableAvatars = catAvatarPaths();
+
+    const int index = QRandomGenerator::global()->bounded(availableAvatars.size());
+
+    return availableAvatars[index];
 }

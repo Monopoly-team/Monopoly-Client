@@ -14,7 +14,12 @@ class GameController : public QObject
 public:
     explicit GameController(QObject* parent = nullptr);
 
-    void addPlayer(int playerId, const QString& nickname, const QString& color = QString());
+    void addPlayer(
+        int playerId,
+        const QString& nickname,
+        const QString& color = QString(),
+        const QString& avatarPath = QString()
+        );
     bool removePlayer(int playerId);
     bool startGame();
 

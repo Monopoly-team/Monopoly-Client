@@ -422,6 +422,7 @@ QJsonObject GameState::toJson() const
         playerJson["id"] = player.id;
         playerJson["nickname"] = player.nickname;
         playerJson["color"] = player.color;
+        playerJson["avatarPath"] = player.avatarPath;
         playerJson["position"] = player.position;
         playerJson["balance"] = player.balance;
         playerJson["isBankrupt"] = player.isBankrupt;
@@ -482,6 +483,7 @@ GameState GameState::fromJson(const QJsonObject& json)
         player.id = playerJson["id"].toInt();
         player.nickname = playerJson["nickname"].toString();
         player.color = playerJson["color"].toString(defaultPlayerColor(state.players_.size()));
+        player.avatarPath = playerJson["avatarPath"].toString();
         player.position = playerJson["position"].toInt();
         player.balance = playerJson["balance"].toInt(PLAYER_START_BALANCE);
         player.isBankrupt = playerJson["isBankrupt"].toBool(false);
@@ -554,10 +556,18 @@ GameState GameState::fromJson(const QJsonObject& json)
     return state;
 }
 
-void GameState::addPlayer(int id, const QString& nickname, const QString& color)
+void GameState::addPlayer(
+    int id,
+    const QString& nickname,
+    const QString& color,
+    const QString& avatarPath
+    )
 {
     if (Player* existingPlayer = playerById(id)) {
         existingPlayer->nickname = nickname;
+        if (!avatarPath.trimmed().isEmpty()) {
+            existingPlayer->avatarPath = avatarPath;
+        }
         if (!color.trimmed().isEmpty()) {
             existingPlayer->color = color;
         }
@@ -569,7 +579,7 @@ void GameState::addPlayer(int id, const QString& nickname, const QString& color)
     player.nickname = nickname;
     player.color = color.trimmed().isEmpty() ? defaultPlayerColor(players_.size()) : color;
     player.active = true;
-
+    player.avatarPath = avatarPath;
     if (players_.isEmpty()) {
         currentPlayerId_ = id;
     }

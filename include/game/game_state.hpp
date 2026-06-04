@@ -35,6 +35,7 @@ struct Player
     int id = 0;
     QString nickname;
     QString color;
+    QString avatarPath;
 
     int position = 0;
     int balance = PLAYER_START_BALANCE;
@@ -45,6 +46,7 @@ struct Player
     int roundsInJail = 0;
 
     QVector<int> ownedProperties;
+
 };
 
 class GameState
@@ -55,7 +57,12 @@ public:
     QJsonObject toJson() const;
     static GameState fromJson(const QJsonObject& json);
 
-    void addPlayer(int id, const QString& nickname, const QString& color = QString());
+    void addPlayer(
+        int id,
+        const QString& nickname,
+        const QString& color = QString(),
+        const QString& avatarPath = QString()
+        );
 
     const QVector<Cell>& board() const;
     QVector<Cell>& board();

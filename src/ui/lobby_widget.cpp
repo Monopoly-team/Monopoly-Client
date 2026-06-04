@@ -86,8 +86,10 @@ void LobbyWidget::updatePlayers(const QVector<ClientLobbyPlayer> &players)
     for(int i = 0; i < count; ++i)
     {
         playerCards_[i]->setNickname(players[i].nickname);
+        playerCards_[i]->setAvatarPath(players[i].avatarPath);
         playerCards_[i]->setReady(players[i].ready);
         playerCards_[i]->show();
+
     }
 }
 

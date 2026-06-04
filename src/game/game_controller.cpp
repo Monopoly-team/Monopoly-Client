@@ -30,7 +30,12 @@ GameController::GameController(QObject* parent)
 {
 }
 
-void GameController::addPlayer(int playerId, const QString& nickname, const QString& color)
+void GameController::addPlayer(
+    int playerId,
+    const QString& nickname,
+    const QString& color,
+    const QString& avatarPath
+    )
 {
     GameState& state = session_.state();
 
@@ -46,7 +51,7 @@ void GameController::addPlayer(int playerId, const QString& nickname, const QStr
 
     const bool hadPlayer = session_.hasPlayer(playerId);
 
-    if (!session_.addPlayer(playerId, nickname, color)) {
+    if (!session_.addPlayer(playerId, nickname, color, avatarPath)) {
         appendEvent(QStringLiteral("Не удалось добавить игрока."));
         return;
     }

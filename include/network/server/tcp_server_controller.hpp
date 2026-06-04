@@ -15,6 +15,7 @@ struct ServerPlayer
     QString     nickname;
     quint16     id;
     bool        ready = false;
+    QString     avatarPath;
 };
 
 class TcpServerController : public QObject
@@ -33,6 +34,8 @@ public:
     bool startServer(quint16 port);
     bool isListening() const;
 private:
+    QString randomAvailableAvatarPath() const;
+
     void handleMessage(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleConnectRequest(QTcpSocket* senderSocket, const QJsonObject& message);
     void handleReadyChanged(QTcpSocket* senderSocket, const QJsonObject& message);

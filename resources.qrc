@@ -49,5 +49,11 @@
         <file>resources/img/game.ico</file>
         <file>resources/audio/buy_sound.wav</file>
         <file>resources/audio/auction_start.wav</file>
+        <file>resources/img/cat1.png</file>
+        <file>resources/img/cat2.png</file>
+        <file>resources/img/cat3.png</file>
+        <file>resources/img/cat4.png</file>
+        <file>resources/img/cat5.png</file>
+        <file>resources/img/cat6.png</file>
     </qresource>
 </RCC>

@@ -30,6 +30,7 @@ void PlayerCardGameWidget::setBalance(qint64 balance)
 void PlayerCardGameWidget::setPlayer(const ClientGamePlayer& player, quint16 winnerId)
 {
     setNickname(player.nickname);
+    setAvatarPath(player.avatarPath);
     setBalance(player.balance);
     applyVisualState(player, winnerId);
 }
