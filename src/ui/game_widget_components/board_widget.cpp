@@ -560,7 +560,30 @@ QString BoardWidget::iconForEventText(const QString& text) const
     {
         return QString::fromUtf8("📍");
     }
+    if (lowerText.contains(QStringLiteral("кикнут")) ||
+        lowerText.contains(QStringLiteral("кик")) ||
+        lowerText.contains(QStringLiteral("заблокирован")))
+    {
+        return QString::fromUtf8("🚫");
+    }
 
+    if (lowerText.contains(QStringLiteral("штраф")) ||
+        lowerText.contains(QStringLiteral("оштрафован")))
+    {
+        return QString::fromUtf8("💸");
+    }
+
+    if (lowerText.contains(QStringLiteral("бонус")) ||
+        lowerText.contains(QStringLiteral("награду")))
+    {
+        return QString::fromUtf8("🎁");
+    }
+
+    if (lowerText.contains(QStringLiteral("изменение баланса")) ||
+        lowerText.contains(QStringLiteral("баланс измен")))
+    {
+        return QString::fromUtf8("🧾");
+    }
     if (lowerText.contains(QStringLiteral("побед")) ||
         lowerText.contains(QStringLiteral("выиграл игру")) ||
         lowerText.contains(QStringLiteral("игра окончена")))

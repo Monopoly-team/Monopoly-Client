@@ -424,6 +424,93 @@ QJsonObject TcpServerController::gameStartedMessage()
         );
 }
 
+void TcpServerController::handleAdminAction(QTcpSocket* senderSocket, const QJsonObject& message)
+{
+    if (senderSocket != admin_)
+        return;
+
+    if (!gameController_)
+        return;
+
+    const QJsonObject payload = message["payload"].toObject();
+
+    const QString action = payload["action"].toString().trimmed().toLower();
+    const quint16 playerId = static_cast<quint16>(payload["playerId"].toInt());
+    const int amount = payload["amount"].toInt(0);
+    const int balance = payload["balance"].toInt(0);
+    const QString reason = payload["reason"].toString();
+
+    if (action.isEmpty() || playerId == 0)
+        return;
+
+    if (action == "kick" && playerId == 1)
+    {
+        gameController_->applyAdminAction(
+            action,
+            playerId,
+            amount,
+            balance,
+            reason
+            );
+
+        broadcastGameUpdate();
+        shutdownGame("host_kicked");
+        return;
+    }
+
+    const bool success = gameController_->applyAdminAction(
+        action,
+        playerId,
+        amount,
+        balance,
+        reason
+        );
+
+    if (!success)
+    {
+        broadcastGameUpdate();
+        return;
+    }
+
+    if (action == "kick")
+    {
+        QTcpSocket* kickedSocket = socketByPlayerId(playerId);
+
+        if (kickedSocket)
+        {
+            QJsonObject disconnectPayload;
+            disconnectPayload["reason"] = "kicked_by_admin";
+
+            sendToClient(
+                kickedSocket,
+                NetworkMessage::create(
+                    "server_disconnect",
+                    SERVER_ID,
+                    disconnectPayload
+                    )
+                );
+
+            players_.remove(kickedSocket);
+            kickedSocket->disconnectFromHost();
+        }
+    }
+
+    broadcastLobbyUpdate();
+    sendLobbyPlayersToAdmin();
+    broadcastGameUpdate();
+}
+
+QTcpSocket* TcpServerController::socketByPlayerId(quint16 playerId) const
+{
+    for (auto it = players_.cbegin(); it != players_.cend(); ++it) {
+        if (it.value().id == playerId) {
+            return it.key();
+        }
+    }
+
+    return nullptr;
+}
+
 void TcpServerController::startGame()
 {
     if (gameStarted_)
@@ -593,70 +680,17 @@ void TcpServerController::handleChatMessage(QTcpSocket* senderSocket, const QJso
 
 void TcpServerController::handleAdminMessage(QTcpSocket* senderSocket, const QJsonObject& message)
 {
-    Q_UNUSED(senderSocket);
-
     const QString type = message["type"].toString();
 
     if (type == "admin_action")
     {
-        handleAdminAction(message);
+        handleAdminAction(senderSocket, message);
         return;
     }
 
     qDebug() << "[Server] unhandled admin type:" << type;
 }
 
-void TcpServerController::handleAdminAction(const QJsonObject& message)
-{
-    const QJsonObject payload = message["payload"].toObject();
-    const QString action = payload["action"].toString();
-
-    if(action == "kick")
-    {
-        handleKickPlayer(payload["playerId"].toInt());
-        return;
-    }
-
-    qDebug() << "[Server] unknown admin action:" << action;
-}
-
-void TcpServerController::handleKickPlayer(quint16 playerId)
-{
-    for(auto it = players_.begin(); it != players_.end(); ++it)
-    {
-        if(it.value().id != playerId)
-            continue;
-        if (it.value().id == 1)
-        {
-            qDebug() << "[Server] Host kicked. Shutting down game.";
-            shutdownGame("host_kicked");
-            return;
-        }
-        QTcpSocket* socket = it.key();
-
-        qDebug() << "[Server] kicking player"
-                 << it.value().nickname
-                 << playerId;
-
-        QJsonObject payload;
-        payload["reason"] = "kicked_by_admin";
-
-        sendToClient(
-            socket,
-            NetworkMessage::create(
-                "server_disconnect",
-                SERVER_ID,
-                payload
-                )
-            );
-
-        socket->disconnectFromHost();
-
-        return;
-    }
-
-    qDebug() << "[Server] player not found:" << playerId;
-}
 
 void TcpServerController::handlePlayerMessage(QTcpSocket* senderSocket, const QJsonObject& message)
 {

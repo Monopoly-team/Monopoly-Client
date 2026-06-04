@@ -269,6 +269,113 @@ const GameState& GameController::gameState() const
     return session_.state();
 }
 
+bool GameController::applyAdminAction(
+    const QString& action,
+    int playerId,
+    int amount,
+    int balance,
+    const QString& reason
+    )
+{
+    Player* player = session_.state().playerById(playerId);
+
+    if (!player) {
+        appendEvent(
+            QStringLiteral("Админ-действие отклонено: игрок %1 не найден.")
+                .arg(playerId)
+            );
+
+        emit stateChanged();
+        return false;
+    }
+
+    const QString normalizedAction = action.trimmed().toLower();
+    const QString safeReason = reason.trimmed().isEmpty()
+                                   ? QStringLiteral("не указана")
+                                   : reason.trimmed();
+
+    if (normalizedAction == "set_balance") {
+        player->balance = qMax(0, balance);
+
+        appendEvent(
+            QStringLiteral("%1 получил изменение баланса от админа: теперь %2. Причина: %3.")
+                .arg(playerName(*player))
+                .arg(player->balance)
+                .arg(safeReason)
+            );
+
+        emit stateChanged();
+        return true;
+    }
+
+    if (normalizedAction == "bonus") {
+        const int safeAmount = qMax(0, amount);
+        player->balance += safeAmount;
+
+        appendEvent(
+            QStringLiteral("%1 получил бонус от админа: +%2. Причина: %3.")
+                .arg(playerName(*player))
+                .arg(safeAmount)
+                .arg(safeReason)
+            );
+
+        emit stateChanged();
+        return true;
+    }
+
+    if (normalizedAction == "fine") {
+        const int safeAmount = qMax(0, amount);
+        player->balance -= safeAmount;
+
+        appendEvent(
+            QStringLiteral("%1 получил штраф от админа: -%2. Причина: %3.")
+                .arg(playerName(*player))
+                .arg(safeAmount)
+                .arg(safeReason)
+            );
+
+        if (player->balance < 0) {
+            declareBankrupt(*player);
+        }
+
+        updateGameOver();
+        emit stateChanged();
+        return true;
+    }
+
+    if (normalizedAction == "kick") {
+        const QString kickedPlayerName = playerName(*player);
+
+        if (!session_.removePlayer(playerId)) {
+            appendEvent(
+                QStringLiteral("Админ не смог кикнуть игрока %1.")
+                    .arg(kickedPlayerName)
+                );
+
+            emit stateChanged();
+            return false;
+        }
+
+        appendEvent(
+            QStringLiteral("%1 кикнут админом. Причина: %2.")
+                .arg(kickedPlayerName)
+                .arg(safeReason)
+            );
+
+        updateGameOver();
+        emit stateChanged();
+        return true;
+    }
+
+    appendEvent(
+        QStringLiteral("Админ-действие отклонено: неизвестная команда \"%1\".")
+            .arg(action)
+        );
+
+    emit stateChanged();
+    return false;
+}
+
 QString GameController::actionTypeFromJson(const QJsonObject& payload) const
 {
     QString actionType = payload["action"].toString().trimmed();

@@ -33,6 +33,14 @@ public:
 
     const GameState& gameState() const;
 
+    bool applyAdminAction(
+        const QString& action,
+        int playerId,
+        int amount,
+        int balance,
+        const QString& reason
+        );
+
 signals:
     void stateChanged();
 

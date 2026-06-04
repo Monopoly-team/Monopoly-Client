@@ -45,10 +45,6 @@ private:
     void handleAdminMessage(QTcpSocket* senderSocket, const QJsonObject &message);
     void handlePlayerMessage(QTcpSocket* senderSocket, const QJsonObject &message);
 
-    void handleAdminAction(const QJsonObject& message);
-    void handleKickPlayer(quint16 playerId);
-
-
     void sendToClient(QTcpSocket* client, const QJsonObject& message);
     void broadcastMessage(const QJsonObject& message);
     void broadcastToPlayers(const QJsonObject& message);
@@ -77,6 +73,9 @@ private:
     void shutdownGame(const QString& reason);
 
     QJsonObject gameStartedMessage();
+
+    void handleAdminAction(QTcpSocket* senderSocket, const QJsonObject& message);
+    QTcpSocket* socketByPlayerId(quint16 playerId) const;
 
 private:
     QTcpServer*                         server_;
