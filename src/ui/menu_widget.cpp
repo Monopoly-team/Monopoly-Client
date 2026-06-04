@@ -36,6 +36,9 @@ MenuWidget::MenuWidget(QWidget *parent)
     joinButton_->setFixedWidth(420);
     joinButton_->setCursor(Qt::PointingHandCursor);
 
+    createButton_->setEnabled(false);
+    joinButton_->setEnabled(false);
+
     buttonsLayout_->addWidget(createButton_);
     buttonsLayout_->addWidget(joinButton_);
 
@@ -49,6 +52,9 @@ MenuWidget::MenuWidget(QWidget *parent)
     cardLayout_->addLayout(buttonsLayout_);
     cardLayout_->addStretch();
 
+    connect(nameEdit_, &QLineEdit::textChanged, this, [this]() {
+        updateActionButtonsState();
+    });
     connect(createButton_, &QPushButton::clicked, this, &MenuWidget::createGameRequested);
     connect(joinButton_,   &QPushButton::clicked, this, &MenuWidget::joinGameRequested);
 }
@@ -73,4 +79,20 @@ QPushButton *MenuWidget::createButton() const
 QPushButton *MenuWidget::joinButton() const
 {
     return joinButton_;
+}
+
+bool MenuWidget::hasNickname() const
+{
+    return !nickname().isEmpty();
+}
+
+void MenuWidget::updateActionButtonsState()
+{
+    const bool canContinue = hasNickname();
+
+    createButton_->setEnabled(canContinue);
+    joinButton_->setEnabled(canContinue);
+
+    createButton_->setCursor(canContinue ? Qt::PointingHandCursor : Qt::ForbiddenCursor);
+    joinButton_->setCursor(canContinue ? Qt::PointingHandCursor : Qt::ForbiddenCursor);
 }

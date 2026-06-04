@@ -23,7 +23,9 @@ public:
 
     QPushButton *createButton() const;
     QPushButton *joinButton() const;
-
+    bool hasNickname() const;
+private:
+    void updateActionButtonsState();
 private:
     QLabel*         menuLabel_;
 

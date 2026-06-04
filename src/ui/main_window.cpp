@@ -204,6 +204,8 @@ void MainWindow::showGame()
 
 void MainWindow::createGame()
 {
+    if (!ensureNicknameEntered())
+        return;
     if (!serverController_)
         serverController_ = new TcpServerController(this);
 
@@ -228,6 +230,8 @@ void MainWindow::createGame()
 
 void MainWindow::joinGame()
 {
+    if (!ensureNicknameEntered())
+        return;
     QString ip = menuWidget_->serverIp();
     clientController_->connectToServer(ip,7777);
 }
@@ -414,4 +418,18 @@ void MainWindow::sendBuildBusinessAction(int cellId)
             payload
             )
         );
+}
+
+bool MainWindow::ensureNicknameEntered()
+{
+    if (menuWidget_->hasNickname())
+        return true;
+
+    QMessageBox::warning(
+        this,
+        "Никнейм не указан",
+        "Введите никнейм перед созданием игры или подключением."
+        );
+
+    return false;
 }

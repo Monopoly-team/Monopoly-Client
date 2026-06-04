@@ -55,6 +55,8 @@ private slots:
     void sendStartAuctionAction();
     void sendAuctionBidAction(int amount);
     void sendBuildBusinessAction(int cellId);
+private:
+    bool ensureNicknameEntered();
 protected:
     void resizeEvent(QResizeEvent* event) override;
 public:
