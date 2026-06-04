@@ -64,8 +64,9 @@ private:
     void cancelCountdown();
     bool areAllPlayersReady() const;
 
-    void sendPurchaseOfferToCurrentPlayer();
-    void startAuction();
+    void sendPurchaseOfferToCurrentPlayer(quint16 expectedPlayerId);
+    void startAuction(quint16 requesterPlayerId);
+    void clearPendingPurchaseOffer();
     void handleAuctionBid(quint16 playerId, const QJsonObject& payload);
     void finishAuction();
     void broadcastAuctionUpdate();
@@ -96,6 +97,9 @@ private:
     quint16                             auctionHighestBidderId_     = 0;
     QString                             auctionHighestBidderName_;
     quint16                             auctionOwnerTurnPlayerId_   = 0;
+
+    quint16                             purchaseOfferPendingPlayerId_ = 0;
+    int                                 purchaseOfferPendingCellId_ = -1;
 
 
 };

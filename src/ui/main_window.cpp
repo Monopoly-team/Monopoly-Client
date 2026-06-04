@@ -262,6 +262,8 @@ void MainWindow::updateSettingsButtonGeometry()
 
 void MainWindow::sendRollDiceAction()
 {
+    if (gameOver_)
+        return;
     QJsonObject payload;
     payload["action"] = "roll_dice";
 
@@ -276,6 +278,8 @@ void MainWindow::sendRollDiceAction()
 
 void MainWindow::showPurchaseOffer(int cellId, const QString& cellName, int price)
 {
+    if (gameOver_)
+        return;
     if (!purchaseOfferDialog_)
     {
         purchaseOfferDialog_ = new PurchaseOfferDialog(this);
@@ -306,6 +310,8 @@ void MainWindow::showAuctionUpdate(
     const QString& highestBidderName
     )
 {
+    if (gameOver_)
+        return;
     if (!auctionDialog_)
     {
         auctionDialog_ = new AuctionDialog(this);
@@ -348,6 +354,8 @@ void MainWindow::closeAuctionDialog()
 
 void MainWindow::sendBuyBusinessAction()
 {
+    if (gameOver_)
+        return;
     QJsonObject payload;
     payload["action"] = "buy_business";
 
@@ -362,6 +370,19 @@ void MainWindow::sendBuyBusinessAction()
 
 void MainWindow::updateLocalPlayerState(const ClientGameState& state)
 {
+    gameOver_ = state.isGameOver;
+
+    if (gameOver_)
+    {
+        if (purchaseOfferDialog_)
+            purchaseOfferDialog_->hide();
+
+        if (auctionDialog_)
+            auctionDialog_->hide();
+
+        gameWidget_->setAuctionActive(false);
+    }
+
     const quint16 localPlayerId = clientController_->playerId();
 
     for (const ClientGamePlayer& player : state.players)
@@ -378,6 +399,8 @@ void MainWindow::updateLocalPlayerState(const ClientGameState& state)
 
 void MainWindow::sendStartAuctionAction()
 {
+    if (gameOver_)
+        return;
     QJsonObject payload;
     payload["action"] = "start_auction";
 
@@ -392,6 +415,8 @@ void MainWindow::sendStartAuctionAction()
 
 void MainWindow::sendAuctionBidAction(int amount)
 {
+    if (gameOver_)
+        return;
     QJsonObject payload;
     payload["action"] = "auction_bid";
     payload["amount"] = amount;
@@ -407,6 +432,8 @@ void MainWindow::sendAuctionBidAction(int amount)
 
 void MainWindow::sendBuildBusinessAction(int cellId)
 {
+    if (gameOver_)
+        return;
     QJsonObject payload;
     payload["action"] = "build_business";
     payload["cellId"] = cellId;

@@ -79,6 +79,7 @@ private:
     PurchaseOfferDialog* purchaseOfferDialog_   = nullptr;
     AuctionDialog*       auctionDialog_         = nullptr;
     int                  localPlayerBalance_    = 0;
+    bool                 gameOver_ = false;
 
 };
 
