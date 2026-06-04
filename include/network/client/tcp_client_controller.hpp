@@ -105,9 +105,9 @@ private:
     void handlePurchaseOffer(const QJsonObject& message);
     void handleAuctionUpdate(const QJsonObject& message);
     void handleAuctionFinished(const QJsonObject& message);
-    using MessageHandler = std::function<void(const QJsonObject&)>;
     void handleCountdownUpdate(const QJsonObject& message);
     void handleCountdownCancelled(const QJsonObject& message);
+    using MessageHandler = std::function<void(const QJsonObject&)>;
     void registerMessageHandlers();
 private:
     QTcpSocket*                     socket_;

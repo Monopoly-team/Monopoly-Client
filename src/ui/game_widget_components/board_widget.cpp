@@ -356,6 +356,9 @@ void BoardWidget::sendMessage()
 void BoardWidget::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
+
+    pixmapCache_.clear();
+
     updateChatGeometry();
 }
 void BoardWidget::contextMenuEvent(QContextMenuEvent* event)
@@ -756,6 +759,75 @@ void BoardWidget::appendSystemLine(const QString& text, bool withEventIcon)
         );
 }
 
+QString BoardWidget::pixmapCacheKey(const QString& path, const QSize& targetSize) const
+{
+    return path
+           + "|"
+           + QString::number(targetSize.width())
+           + "x"
+           + QString::number(targetSize.height());
+}
+
+QPixmap BoardWidget::cachedCellPixmap(const QString& path, const QSize& targetSize)
+{
+    if (path.isEmpty() || targetSize.isEmpty())
+        return {};
+
+    const QString key = pixmapCacheKey(path, targetSize);
+
+    const auto cached = pixmapCache_.constFind(key);
+
+    if (cached != pixmapCache_.constEnd())
+        return cached.value();
+
+    QPixmap result;
+
+    if (path.endsWith(".svg", Qt::CaseInsensitive))
+    {
+        QSvgRenderer renderer(path);
+
+        if (!renderer.isValid())
+            return {};
+
+        QSize renderSize = renderer.defaultSize();
+
+        if (renderSize.isEmpty())
+            renderSize = targetSize;
+
+        renderSize.scale(targetSize, Qt::KeepAspectRatio);
+
+        result = QPixmap(renderSize);
+        result.fill(Qt::transparent);
+
+        QPainter svgPainter(&result);
+        svgPainter.setRenderHint(QPainter::Antialiasing, true);
+        svgPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+        renderer.render(
+            &svgPainter,
+            QRect(QPoint(0, 0), renderSize)
+            );
+    }
+    else
+    {
+        const QPixmap source(path);
+
+        if (source.isNull())
+            return {};
+
+        result = source.scaled(
+            targetSize,
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+            );
+    }
+
+    if (!result.isNull())
+        pixmapCache_.insert(key, result);
+
+    return result;
+}
+
 bool BoardWidget::canBuildOnCellEvenly(const ClientBoardCell& targetCell) const
 {
     if (targetCell.type != CellType::Business)
@@ -1012,7 +1084,6 @@ void BoardWidget::drawCell(
 
     const int stripSize = 12;
     const int priceSize = 28;
-    const int sidePriceSize = 18;
 
     QRect groupRect;
     QRect priceRect;
@@ -1056,14 +1127,21 @@ void BoardWidget::drawCell(
     {
         if (!cell->imagePath.isEmpty())
         {
-            QSvgRenderer renderer(cell->imagePath);
+            const QPixmap pixmap = cachedCellPixmap(cell->imagePath, rect.size());
 
-            if (renderer.isValid())
+            if (!pixmap.isNull())
             {
-                renderer.render(
-                    &painter,
-                    rect
-                    );
+                const QPixmap pixmap = cachedCellPixmap(cell->imagePath, rect.size());
+
+                if (!pixmap.isNull())
+                {
+                    const QPoint pos(
+                        rect.center().x() - pixmap.width() / 2,
+                        rect.center().y() - pixmap.height() / 2
+                        );
+
+                    painter.drawPixmap(pos, pixmap);
+                }
             }
         }
         else
@@ -1086,60 +1164,59 @@ void BoardWidget::drawCell(
     }
     else
     {
+
         if (!cell->imagePath.isEmpty())
         {
-            QPixmap pixmap(cell->imagePath);
+            const QRect imageRect = contentRect.adjusted(2, 2, -2, -2);
 
-            if (!pixmap.isNull())
+            painter.save();
+
+            if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
             {
-                QRect imageRect = contentRect.adjusted(2, 2, -2, -2);
+                painter.translate(imageRect.center());
+                painter.rotate(-90);
 
-                painter.save();
+                const QRect rotatedRect(
+                    -imageRect.height() / 2,
+                    -imageRect.width() / 2,
+                    imageRect.height(),
+                    imageRect.width()
+                    );
 
-                if (side == BoardCellSide::Top || side == BoardCellSide::Bottom)
+                const QPixmap pixmap = cachedCellPixmap(
+                    cell->imagePath,
+                    rotatedRect.size()
+                    );
+
+                if (!pixmap.isNull())
                 {
-                    painter.translate(imageRect.center());
-                    painter.rotate(-90);
-
-                    QRect rotatedRect(
-                        -imageRect.height() / 2,
-                        -imageRect.width() / 2,
-                        imageRect.height(),
-                        imageRect.width()
+                    const QPoint pos(
+                        rotatedRect.center().x() - pixmap.width() / 2,
+                        rotatedRect.center().y() - pixmap.height() / 2
                         );
 
-                    QPixmap scaled = pixmap.scaled(
-                        rotatedRect.size(),
-                        Qt::KeepAspectRatio,
-                        Qt::SmoothTransformation
-                        );
-
-                    QPoint pos(
-                        rotatedRect.center().x() - scaled.width() / 2,
-                        rotatedRect.center().y() - scaled.height() / 2
-                        );
-
-                    painter.drawPixmap(pos, scaled);
+                    painter.drawPixmap(pos, pixmap);
                 }
-                else
-                {
-                    QPixmap scaled = pixmap.scaled(
-                        imageRect.size(),
-                        Qt::KeepAspectRatio,
-                        Qt::SmoothTransformation
-                        );
-
-                    QPoint pos(
-                        imageRect.center().x() - scaled.width() / 2,
-                        imageRect.center().y() - scaled.height() / 2
-                        );
-
-                    painter.drawPixmap(pos, scaled);
-                }
-
-
-                painter.restore();
             }
+            else
+            {
+                const QPixmap pixmap = cachedCellPixmap(
+                    cell->imagePath,
+                    imageRect.size()
+                    );
+
+                if (!pixmap.isNull())
+                {
+                    const QPoint pos(
+                        imageRect.center().x() - pixmap.width() / 2,
+                        imageRect.center().y() - pixmap.height() / 2
+                        );
+
+                    painter.drawPixmap(pos, pixmap);
+                }
+            }
+
+            painter.restore();
         }
         else
         {
@@ -1149,6 +1226,7 @@ void BoardWidget::drawCell(
                 cell->name
                 );
         }
+
     }
 
     if (isBusiness)

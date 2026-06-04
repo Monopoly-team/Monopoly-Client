@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QHash>
+#include <QPixmap>
 
 enum class BoardCellSide
 {
@@ -85,7 +86,8 @@ private:
     void appendPlayerEventLine(const ClientGamePlayer& player, const QString& text);
     void appendTurnEventLine(const QString& eventText, const ClientGamePlayer& player, const QString& nickname);
     void appendSystemLine(const QString& text, bool withEventIcon = true);
-
+    QString pixmapCacheKey(const QString& path, const QSize& targetSize) const;
+    QPixmap cachedCellPixmap(const QString& path, const QSize& targetSize);
 
 private:
     struct TokenAnimation
@@ -99,20 +101,21 @@ private:
         float progress = 0.0f;
     };
 
-    QFrame*                     eventChatArea_;
-    QTextEdit*                  eventsView_;
-    QLineEdit*                  chatInput_;
-    QVector<ClientBoardCell>    cells_;
-    QVector<ClientGamePlayer>   players_;
+    QFrame*                         eventChatArea_;
+    QTextEdit*                      eventsView_;
+    QLineEdit*                      chatInput_;
+    QVector<ClientBoardCell>        cells_;
+    QVector<ClientGamePlayer>       players_;
 
-    QTimer* animationTimer_;
-    QElapsedTimer animationClock_;
+    QTimer*                         animationTimer_;
+    QElapsedTimer                   animationClock_;
 
-    QHash<quint16, QPointF> tokenPositions_;
-    QHash<quint16, TokenAnimation> tokenAnimations_;
-    QHash<quint16, int> playerPositions_;
-    quint16 localPlayerId_ = 0;
-    quint16 winnerId_ = 0;
+    QHash<quint16, QPointF>         tokenPositions_;
+    QHash<quint16, TokenAnimation>  tokenAnimations_;
+    QHash<quint16, int>             playerPositions_;
+    QHash<QString, QPixmap>         pixmapCache_;
+    quint16                         localPlayerId_ = 0;
+    quint16                         winnerId_ = 0;
 
 };
 
