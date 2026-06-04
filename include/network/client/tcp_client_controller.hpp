@@ -1,11 +1,16 @@
 #pragma once
 
+#include "game/models/client_board_cell.hpp"
+
 #include <QObject>
 #include <QTcpSocket>
 #include <QJsonObject>
 #include <QVector>
+#include <QHash>
 
-#include "game/models/client_board_cell.hpp"
+#include <functional>
+
+
 
 
 struct ClientLobbyPlayer
@@ -100,7 +105,12 @@ private:
     void handlePurchaseOffer(const QJsonObject& message);
     void handleAuctionUpdate(const QJsonObject& message);
     void handleAuctionFinished(const QJsonObject& message);
+    using MessageHandler = std::function<void(const QJsonObject&)>;
+    void handleCountdownUpdate(const QJsonObject& message);
+    void handleCountdownCancelled(const QJsonObject& message);
+    void registerMessageHandlers();
 private:
-    QTcpSocket* socket_;
-    quint16     playerId_ = 0;
+    QTcpSocket*                     socket_;
+    quint16                         playerId_ = 0;
+    QHash<QString, MessageHandler>  messageHandlers_;
 };

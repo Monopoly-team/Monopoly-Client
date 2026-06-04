@@ -69,6 +69,8 @@ TcpClientController::TcpClientController(QObject *parent)
 {
     socket_ = new QTcpSocket(this);
 
+    registerMessageHandlers();
+
     connect(socket_, &QTcpSocket::connected,    this, &TcpClientController::onConnected);
     connect(socket_, &QTcpSocket::disconnected, this, &TcpClientController::onDisconnected);
     connect(socket_, &QTcpSocket::readyRead,    this, &TcpClientController::onReadyRead);
@@ -111,78 +113,19 @@ quint16 TcpClientController::playerId() const
 
 void TcpClientController::handleMessage(const QJsonObject& message)
 {
-    const QString& type = message["type"].toString();
+    const QString type = message["type"].toString();
 
-    if(type == "connect_accepted")
+    const auto handler = messageHandlers_.find(type);
+
+    if (handler == messageHandlers_.end())
     {
-        handleConnectAccepted(message);
-        return;
-    }
-    if(type == "lobby_update")
-    {
-        handleLobbyUpdate(message);
-        return;
-    }
-    if(type == "chat_message")
-    {
-        handleChatMessage(message);
-        return;
-    }
-    if(type == "game_started")
-    {
-        handleGameStarted(message);
-        return;
-    }
-    if(type == "countdown_update")
-    {
-        const QJsonObject payload = message["payload"].toObject();
-        emit countdownUpdated(payload["secondsLeft"].toInt());
-        return;
-    }
-    if(type == "countdown_cancelled")
-    {
-        emit countdownCancelled();
-        return;
-    }
-    if (type == "game_event")
-    {
-        handleGameEvent(message);
-        return;
-    }
-    if (type == "game_state")
-    {
-        handleGameState(message);
-        return;
-    }
-    if(type == "server_disconnect")
-    {
-        handleServerDisconnect(message);
-        return;
-    }
-    if (type == "error")
-    {
-        handleError(message);
-        return;
-    }
-    if (type == "purchase_offer")
-    {
-        handlePurchaseOffer(message);
+        qDebug() << "[Client] Unknown message type:" << type;
         return;
     }
 
-    if (type == "auction_update")
-    {
-        handleAuctionUpdate(message);
-        return;
-    }
-
-    if (type == "auction_finished")
-    {
-        handleAuctionFinished(message);
-        return;
-    }
-    qDebug() << "[Client] Unhandled type: " << type;
+    handler.value()(message);
 }
+
 void TcpClientController::handleServerDisconnect(const QJsonObject& message)
 {
     const QJsonObject payload = message["payload"].toObject();
@@ -412,4 +355,78 @@ void TcpClientController::handleAuctionFinished(const QJsonObject& message)
 {
     Q_UNUSED(message);
     emit auctionFinished();
+}
+
+void TcpClientController::handleCountdownUpdate(const QJsonObject& message)
+{
+    const QJsonObject payload = message["payload"].toObject();
+    const int secondsLeft = payload["secondsLeft"].toInt(0);
+
+    emit countdownUpdated(secondsLeft);
+}
+
+void TcpClientController::handleCountdownCancelled(const QJsonObject& message)
+{
+    Q_UNUSED(message);
+
+    emit countdownCancelled();
+}
+
+void TcpClientController::registerMessageHandlers()
+{
+    messageHandlers_["connect_accepted"] = [this](const QJsonObject& message) {
+        handleConnectAccepted(message);
+    };
+
+    messageHandlers_["connect_accept"] = [this](const QJsonObject& message) {
+        handleConnectAccepted(message);
+    };
+
+    messageHandlers_["lobby_update"] = [this](const QJsonObject& message) {
+        handleLobbyUpdate(message);
+    };
+
+    messageHandlers_["game_started"] = [this](const QJsonObject& message) {
+        handleGameStarted(message);
+    };
+
+    messageHandlers_["game_state"] = [this](const QJsonObject& message) {
+        handleGameState(message);
+    };
+
+    messageHandlers_["game_event"] = [this](const QJsonObject& message) {
+        handleGameEvent(message);
+    };
+
+    messageHandlers_["chat_message"] = [this](const QJsonObject& message) {
+        handleChatMessage(message);
+    };
+
+    messageHandlers_["countdown_update"] = [this](const QJsonObject& message) {
+        handleCountdownUpdate(message);
+    };
+
+    messageHandlers_["countdown_cancelled"] = [this](const QJsonObject& message) {
+        handleCountdownCancelled(message);
+    };
+
+    messageHandlers_["purchase_offer"] = [this](const QJsonObject& message) {
+        handlePurchaseOffer(message);
+    };
+
+    messageHandlers_["auction_update"] = [this](const QJsonObject& message) {
+        handleAuctionUpdate(message);
+    };
+
+    messageHandlers_["auction_finished"] = [this](const QJsonObject& message) {
+        handleAuctionFinished(message);
+    };
+
+    messageHandlers_["server_disconnect"] = [this](const QJsonObject& message) {
+        handleServerDisconnect(message);
+    };
+
+    messageHandlers_["error"] = [this](const QJsonObject& message) {
+        handleError(message);
+    };
 }
